@@ -101,4 +101,36 @@ router.get("/:scriptId", authenticateToken, async (req, res) => {
   }
 });
 
+//? Route pour associer un match à un GroupContract
+router.post('/:matchId/groupcontract/:groupContractId', authenticateToken, async (req, res) => {
+  try {
+    const matchId = req.params.matchId;
+    const groupContractId = req.params.groupContractId;
+
+    const match = await Match.findOne({
+      where: { id: matchId },
+    });
+
+    if (!match) {
+      return res.status(404).json({ error: 'Match non trouvé' });
+    }
+
+    const groupContract = await GroupContract.findOne({
+      where: { id: groupContractId },
+    });
+
+    if (!groupContract) {
+      return res.status(404).json({ error: 'GroupContract non trouvé' });
+    }
+
+    match.Group_ID = groupContract.id;
+    await match.save();
+
+    res.status(200).json({ message: 'Match associé au GroupContract avec succès', match });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
+  }
+});
+
 module.exports = router;

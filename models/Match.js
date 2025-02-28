@@ -29,6 +29,10 @@ const Match = sequelize.define(
       allowNull: true,
       field: "team_id_winner",
     },
+    GroupId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     matchDate: {
       type: DataTypes.DATEONLY,
       allowNull: false,
