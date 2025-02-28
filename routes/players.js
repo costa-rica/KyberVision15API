@@ -3,6 +3,7 @@ const Player = require("../models/Player");
 const { authenticateToken } = require("../middleware/auth");
 const { checkBodyReturnMissing } = require("../modules/common");
 const router = express.Router();
+const { isPlayerDuplicate } = require("../modules/players");
 
 router.get("/", authenticateToken, async (req, res) => {
   const players = await Player.findAll();
@@ -22,6 +23,7 @@ router.get("/:id", authenticateToken, async (req, res) => {
 // #########################################################
 // -----  Routes created specfically for Mobile -----------
 // #########################################################
+
 router.post("/create", authenticateToken, async (req, res) => {
   console.log("- accessed POST /team/create_league");
 
@@ -31,7 +33,7 @@ router.post("/create", authenticateToken, async (req, res) => {
     "birthDate",
   ]);
   if (!checkBodyObj.isValid) {
-    return res.status(401).json({
+    return res.status(400).json({
       result: false,
       error: `Missing or empty fields: ${checkBodyObj.missingKeys}`,
     });
@@ -39,12 +41,57 @@ router.post("/create", authenticateToken, async (req, res) => {
 
   const { firstName, lastName, birthDate } = req.body;
 
-  const newPlayer = await Player.create({
-    firstName,
-    lastName,
-    birthDate,
-  });
-  res.json({ result: true, message: "Player created successfully" });
+  try {
+    // Use helper function to check for duplicates
+    const existingPlayer = await isPlayerDuplicate(
+      firstName,
+      lastName,
+      birthDate
+    );
+
+    if (existingPlayer) {
+      return res.status(409).json({
+        result: false,
+        error: "Player already exists in the database",
+      });
+    }
+
+    // Create the new player if they don't exist
+    const newPlayer = await Player.create({ firstName, lastName, birthDate });
+
+    return res.json({ result: true, message: "Player created successfully" });
+  } catch (error) {
+    console.error("Error creating player:", error);
+    return res.status(500).json({
+      result: false,
+      error: "Internal server error",
+    });
+  }
 });
+
+// router.post("/create", authenticateToken, async (req, res) => {
+//   console.log("- accessed POST /team/create_league");
+
+//   const checkBodyObj = checkBodyReturnMissing(req.body, [
+//     "firstName",
+//     "lastName",
+//     "birthDate",
+//   ]);
+//   if (!checkBodyObj.isValid) {
+//     return res.status(401).json({
+//       result: false,
+//       error: `Missing or empty fields: ${checkBodyObj.missingKeys}`,
+//     });
+//   }
+
+//   const { firstName, lastName, birthDate } = req.body;
+
+//   const newPlayer = await Player.create({
+//     firstName,
+//     lastName,
+//     birthDate,
+//   });
+//   res.json({ result: true, message: "Player created successfully" });
+// });
 
 module.exports = router;
