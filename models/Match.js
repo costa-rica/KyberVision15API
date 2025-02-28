@@ -12,22 +12,27 @@ const Match = sequelize.define(
     leagueId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      field: "league_id",
     },
     teamIdAnalyzed: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      field: "team_id_analyzed",
     },
     teamIdOpponent: {
       type: DataTypes.INTEGER,
       allowNull: true,
+      field: "team_id_opponent",
     },
     teamIdWinner: {
       type: DataTypes.INTEGER,
       allowNull: true,
+      field: "team_id_winner",
     },
     matchDate: {
       type: DataTypes.DATEONLY,
       allowNull: false,
+      field: "match_date",
     },
     city: {
       type: DataTypes.STRING,

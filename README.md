@@ -4,13 +4,11 @@
 
 ## Description
 
+- Email confirmation of registration
+  - nodemailer and external directory (env var PATH_NODEMAILER_HTML_TEMPLATES) used for HTML email templates
 - Currently the Development API
 - Database connection and other logic for the Kyber Vision web and mobile apps. This version based on the git@github.com:Priax/KyberVision.git.
 - database reconstructed to resemble the database schema from KV2-BDD-2025-01-22 - BDD.drawio.png
-
-## Key changes from API v0.8.0
-
-???
 
 ## .env
 
@@ -18,12 +16,18 @@
 APP_NAME=KyberVisionAPI09
 JWT_SECRET=<your_code_here>
 PORT=<your_port_here>
-PATH_DATABASE=/home/dashanddata_user/databases/KyberVisionAPI08/
-PATH_VIDEOS=/home/dashanddata_user/project_resources/KyberVisionAPI08/match_videos
-NAME_DB=kv08.db
+PATH_DATABASE=/home/dashanddata_user/databases/KyberVisionAPI09/
+PATH_VIDEOS=/home/dashanddata_user/project_resources/KyberVisionAPI09/match_videos
+NAME_DB=kv09.db
+PATH_NODEMAILER_HTML_TEMPLATES=/home/dashanddata_user/project_resources/KyberVisionAPI09/nodemailer_html_templates
+ADMIN_EMAIL_ADDRESS=kyber.vision.info@gmail.com
+ADMIN_EMAIL_PASSWORD="app pass word from google app password"
 ```
 
-- APP_NAME, PATH_DATABASE and PATH_VIDEOS can by anything this is just what is on the dev server.
+## nodemailer emails
+
+- create folder in project_resources/KyberVisionAPI09
+  - "project_resources/KyberVisionAPI09/nodemailer_html_templates"
 
 ## Route name changes
 

@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const User = require("../models/User");
 const { authenticateToken } = require("../middleware/auth");
 const jwt = require("jsonwebtoken");
+const { sendRegistrationEmail } = require("../modules/mailer");
 
 const asyncHandler = (fn) => (req, res, next) =>
   Promise.resolve(fn(req, res, next)).catch(next);
@@ -34,7 +35,23 @@ router.post(
       created: new Date(),
     });
 
-    res.status(201).json({ message: "Utilisateur créé avec succès.", user });
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "5h",
+    });
+
+    await sendRegistrationEmail(email, username)
+      .then(() => console.log("Email sent successfully"))
+      .catch((error) => console.error("Email failed:", error));
+
+    //   res.status(201).json({
+    //     message: "Utilisateur créé avec succès.",
+    //     user: { email: "email", username: "username" },
+    //     token: "token_code",
+    //   });
+    // })
+    res
+      .status(201)
+      .json({ message: "Utilisateur créé avec succès.", user, token });
   })
 );
 
