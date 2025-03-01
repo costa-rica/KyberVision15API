@@ -1,6 +1,6 @@
 ![Logo](./docs/images/kyberVisionLogo01.png)
 
-# API v0.9.0
+# API v0.10.0
 
 ## Description
 
@@ -13,12 +13,12 @@
 ## .env
 
 ```
-APP_NAME=KyberVisionAPI09
+APP_NAME=KyberVisionAPI10
 JWT_SECRET=<your_code_here>
 PORT=<your_port_here>
-PATH_DATABASE=/home/dashanddata_user/databases/KyberVisionAPI09/
+PATH_DATABASE=/home/dashanddata_user/databases/KyberVisionAPI10/
 PATH_VIDEOS=/home/dashanddata_user/project_resources/KyberVisionAPI09/match_videos
-NAME_DB=kv09.db
+NAME_DB=kv10.db
 PATH_NODEMAILER_HTML_TEMPLATES=/home/dashanddata_user/project_resources/KyberVisionAPI09/nodemailer_html_templates
 ADMIN_EMAIL_ADDRESS=kyber.vision.info@gmail.com
 ADMIN_EMAIL_PASSWORD="app pass word from google app password"
