@@ -205,48 +205,117 @@ router.get("/test", (req, res) => {
 // -----  Routes created specfically for Mobile -----------
 // #########################################################
 
-router.post("/create", authenticateToken, async (req, res) => {
-  const { teamName, city, coachName } = req.body;
-  const user = req.user;
-  console.log(
-    `teamName: ${teamName}, city: ${city}, coachName: ${coachName}, userId: ${user.id}`
-  );
+// router.post("/create", authenticateToken, async (req, res) => {
+//   const { teamName, city, coachName } = req.body;
+//   const user = req.user;
+//   console.log(
+//     `teamName: ${teamName}, city: ${city}, coachName: ${coachName}, userId: ${user.id}`
+//   );
 
-  const checkBodyObj = checkBodyReturnMissing(req.body, [
-    "teamName",
-    "city",
-    "coachName",
-  ]);
-  if (!checkBodyObj.isValid) {
-    return res.status(400).json({
-      result: false,
-      error: `Missing or empty fields: ${checkBodyObj.missingKeys}`,
-    });
-  }
+//   const checkBodyObj = checkBodyReturnMissing(req.body, [
+//     "teamName",
+//     "city",
+//     "coachName",
+//   ]);
+//   if (!checkBodyObj.isValid) {
+//     return res.status(400).json({
+//       result: false,
+//       error: `Missing or empty fields: ${checkBodyObj.missingKeys}`,
+//     });
+//   }
 
+//   try {
+//     // Check if the team already exists
+//     const existingTeam = await Team.findOne({
+//       where: { teamName, city, coachName },
+//     });
+
+//     if (existingTeam) {
+//       return res.status(409).json({
+//         result: false,
+//         error: "Team already exists in the database",
+//       });
+//     }
+
+//     // Create the new team if it doesn't exist
+//     const newTeam = await Team.create({ teamName, city, coachName });
+
+//     return res.json({ result: true, message: "Team created successfully" });
+//   } catch (error) {
+//     console.error("Error creating team:", error);
+//     return res.status(500).json({
+//       result: false,
+//       error: "Internal server error",
+//     });
+//   }
+// });
+
+router.post("/update-or-create", authenticateToken, async (req, res) => {
   try {
-    // Check if the team already exists
+    const { id, teamName, city, coachName } = req.body;
+
+    if (id) {
+      // Update Team if ID is provided
+      const teamToUpdate = await Team.findByPk(id);
+
+      if (!teamToUpdate) {
+        return res.status(404).json({ error: "Team not found" });
+      }
+
+      const updatedFields = {};
+      Object.keys(req.body).forEach((key) => {
+        if (req.body[key] !== null && req.body[key] !== undefined) {
+          updatedFields[key] = req.body[key];
+        }
+      });
+
+      await teamToUpdate.update(updatedFields);
+      return res.status(200).json({ result: true, team: teamToUpdate });
+    }
+
+    // Check for duplicate Team before creating a new one
     const existingTeam = await Team.findOne({
       where: { teamName, city, coachName },
     });
 
     if (existingTeam) {
-      return res.status(409).json({
-        result: false,
-        error: "Team already exists in the database",
+      return res.status(400).json({
+        error: "This team already exists",
       });
     }
 
-    // Create the new team if it doesn't exist
+    if (!teamName || !city || !coachName) {
+      return res.status(400).json({
+        result: false,
+        error: "Missing required fields: teamName, city, coachName",
+      });
+    }
+
     const newTeam = await Team.create({ teamName, city, coachName });
 
-    return res.json({ result: true, message: "Team created successfully" });
+    return res.status(201).json({ result: true, team: newTeam });
   } catch (error) {
-    console.error("Error creating team:", error);
-    return res.status(500).json({
-      result: false,
-      error: "Internal server error",
-    });
+    console.error("Error in /update-or-create-team route:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.delete("/:teamId", authenticateToken, async (req, res) => {
+  try {
+    const { teamId } = req.params;
+
+    // const { success, message, error } = await deleteLeague(leagueId);
+    const team = await Team.findByPk(teamId);
+    if (!team) {
+      return res.status(404).json({ error: "Team not found" });
+    }
+
+    await team.destroy();
+
+    res.status(200).json({ message: "Team deleted successfully" });
+  } catch (error) {
+    console.error("Error in DELETE /teams/:teamId:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -275,35 +344,5 @@ router.post("/create", authenticateToken, async (req, res) => {
 //   });
 //   res.json({ result: true, message: "League created successfully" });
 // });
-
-router.post("/create-league", authenticateToken, async (req, res) => {
-  console.log("- accessed POST /team/create_league");
-
-  const checkBodyObj = checkBodyReturnMissing(req.body, ["name", "category"]);
-  if (!checkBodyObj.isValid) {
-    return res.status(401).json({
-      result: false,
-      error: `Missing or empty fields: ${checkBodyObj.missingKeys}`,
-    });
-  }
-
-  // Check if the team already exists
-  const existingLeague = await League.findOne({
-    where: { name: req.body.name, category: req.body.category },
-  });
-
-  if (existingLeague) {
-    return res.status(409).json({
-      result: false,
-      error: "League already exists in the database",
-    });
-  }
-
-  await League.create({
-    name: req.body.name,
-    category: req.body.category,
-  });
-  res.json({ result: true, message: "League created successfully" });
-});
 
 module.exports = router;

@@ -69,6 +69,74 @@ router.post("/create", authenticateToken, async (req, res) => {
   }
 });
 
+router.post("/update-or-create", authenticateToken, async (req, res) => {
+  try {
+    const { id, firstName, lastName, birthDate } = req.body;
+
+    if (id) {
+      // Update Player if ID is provided
+      const playerToUpdate = await Player.findByPk(id);
+
+      if (!playerToUpdate) {
+        return res.status(404).json({ error: "Player not found" });
+      }
+
+      const updatedFields = {};
+      Object.keys(req.body).forEach((key) => {
+        if (req.body[key] !== null && req.body[key] !== undefined) {
+          updatedFields[key] = req.body[key];
+        }
+      });
+
+      await playerToUpdate.update(updatedFields);
+      return res.status(200).json({ result: true, player: playerToUpdate });
+    }
+
+    // Check for duplicate Player before creating a new one
+    const existingPlayer = await Player.findOne({
+      where: { firstName, lastName, birthDate },
+    });
+
+    if (existingPlayer) {
+      return res.status(400).json({
+        error: "This player already exists",
+      });
+    }
+
+    if (!firstName || !lastName) {
+      return res.status(400).json({
+        result: false,
+        error: "Missing required fields: firstName, lastName",
+      });
+    }
+
+    const newPlayer = await Player.create({ firstName, lastName, birthDate });
+
+    return res.status(201).json({ result: true, player: newPlayer });
+  } catch (error) {
+    console.error("Error in /update-or-create route:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.delete("/:playerId", authenticateToken, async (req, res) => {
+  try {
+    const { playerId } = req.params;
+
+    // const { success, message, error } = await deleteLeague(leagueId);
+    const player = await Player.findByPk(playerId);
+    if (!player) {
+      return res.status(404).json({ error: "Player not found" });
+    }
+
+    await player.destroy();
+    res.status(200).json({ message: "Player deleted successfully" });
+  } catch (error) {
+    console.error("Error in DELETE /players/:playerId:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // router.post("/create", authenticateToken, async (req, res) => {
 //   console.log("- accessed POST /team/create_league");
 

@@ -211,24 +211,6 @@ router.post("/update-or-create", authenticateToken, async (req, res) => {
         error: "This record already exists",
       });
     }
-
-    // Validate required fields
-    const checkBodyObj = checkBodyReturnMissing(req.body, [
-      "leagueId",
-      "teamIdAnalyzed",
-      "teamIdOpponent",
-      "teamIdWinner",
-      "groupContractId",
-      "matchDate",
-      "city",
-    ]);
-    if (!checkBodyObj.isValid) {
-      return res.status(400).json({
-        result: false,
-        error: `Missing or empty fields: ${checkBodyObj.missingKeys}`,
-      });
-    }
-
     // Create new match if no duplicate exists
     const { success, match, error } = await createMatch({
       leagueId,

@@ -15,6 +15,7 @@ var playersRouter = require("./routes/players");
 var scriptsRouter = require("./routes/scripts");
 var syncContractsRouter = require("./routes/syncContracts");
 var teamsRouter = require("./routes/teams");
+var leaguesRouter = require("./routes/leagues");
 var adminDbRouter = require("./routes/adminDb");
 
 var app = express();
@@ -37,6 +38,7 @@ app.use("/players", playersRouter);
 app.use("/scripts", scriptsRouter);
 app.use("/syncContracts", syncContractsRouter);
 app.use("/teams", teamsRouter);
+app.use("/leagues", leaguesRouter);
 app.use("/admin-db", adminDbRouter);
 
 // Increase payload size for large files

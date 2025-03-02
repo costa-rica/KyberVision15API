@@ -17,10 +17,6 @@ const Team = sequelize.define("Team", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  groupPassword: {
-    type: DataTypes.STRING,
-    field: "group_password",
-  },
   coachName: {
     type: DataTypes.STRING,
     allowNull: false,
