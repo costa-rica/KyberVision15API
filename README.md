@@ -22,6 +22,8 @@ NAME_DB=kv10.db
 PATH_NODEMAILER_HTML_TEMPLATES=/home/dashanddata_user/project_resources/KyberVisionAPI09/nodemailer_html_templates
 ADMIN_EMAIL_ADDRESS=kyber.vision.info@gmail.com
 ADMIN_EMAIL_PASSWORD="app pass word from google app password"
+PATH_DB_BACKUPS=/home/shared/project_resources/KyberVisionAPI10/db_backups
+PATH_PROJECT_RESOURCES=/home/shared/project_resources/KyberVisionAPI10
 ```
 
 ## nodemailer emails
