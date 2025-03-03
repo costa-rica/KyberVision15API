@@ -137,6 +137,10 @@ router.delete("/:playerId", authenticateToken, async (req, res) => {
   }
 });
 
+router.get("/team/:teamId", authenticateToken, async (req, res) => {
+  console.log("- accessed GET /players/team/:teamId");
+  res.json({ result: true });
+});
 // router.post("/create", authenticateToken, async (req, res) => {
 //   console.log("- accessed POST /team/create_league");
 
