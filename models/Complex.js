@@ -1,4 +1,4 @@
-// NR: refactored 2025-02-08
+// NR: refactored 2025-03-04
 const { DataTypes } = require("sequelize");
 const sequelize = require("./_connection");
 
@@ -10,13 +10,17 @@ const Complex = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
-    Type: {
+    type: {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
         is: /^K.+/, // Ensures the string starts with "K"
       },
     },
+  },
+  {
+    tableName: "complexes",
+    timestamps: false,
   }
 );
 

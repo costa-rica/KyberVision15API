@@ -1,4 +1,4 @@
-// NR: refactored 2025-02-08
+// NR: refactored 2025-03-04
 const { DataTypes } = require("sequelize");
 const sequelize = require("./_connection");
 
@@ -10,18 +10,25 @@ const OpponentServeTimestamp = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
-    Action_ID: {
+    actionId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      field: "action_id",
     },
-    Timestamp_ServiceOpp: {
+    timestampServiceOpp: {
       type: DataTypes.DATE,
       allowNull: false,
+      field: "timestamp_service_opp",
     },
-    Serve_type: {
+    serveType: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      field: "serve_type",
     },
+  },
+  {
+    tableName: "opponent_serve_timestamps",
+    timestamps: false,
   }
 );
 

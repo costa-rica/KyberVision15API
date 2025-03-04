@@ -1,4 +1,4 @@
-// NR: refactored 2025-02-08
+// NR: refactored 2025-03-04
 const { DataTypes } = require("sequelize");
 const sequelize = require("./_connection");
 
@@ -10,29 +10,37 @@ const Point = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
-    SetNumber: {
+    setNumber: {
       type: DataTypes.INTEGER,
       allowNull: false,
       validate: {
         min: 1,
         max: 5,
       },
+      field: "set_number",
     },
-    Score_team_analyzed: {
+    scoreTeamAnalyzed: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      field: "score_team_analyzed",
     },
-    Score_team_other: {
+    scoreTeamOther: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      field: "score_team_other",
     },
-    Rotation: {
+    rotation: {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
         isIn: [["P1", "P2", "P3", "P4", "P5", "P6"]],
       },
+      field: "rotation",
     },
+  },
+  {
+    tableName: "points",
+    timestamps: false,
   }
 );
 

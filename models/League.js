@@ -18,6 +18,10 @@ const League = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+  },
+  {
+    tableName: "leagues",
+    timestamps: false,
   }
 );
 

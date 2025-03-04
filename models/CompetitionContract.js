@@ -10,14 +10,20 @@ const CompetitionContract = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
-    League_ID: {
+    leagueId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      field: "league_id",
     },
-    Team_ID: {
+    teamId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      field: "team_id",
     },
+  },
+  {
+    tableName: "competition_contracts",
+    timestamps: false,
   }
 );
 

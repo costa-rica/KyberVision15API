@@ -10,21 +10,24 @@ const SyncContract = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
-    Script_ID: {
+    scriptId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      field: "script_id",
     },
-    Video_ID: {
+    videoId: {
       type: DataTypes.INTEGER,
       allowNull: true,
+      field: "video_id",
     },
-    Delta_Time: {
+    deltaTime: {
       type: DataTypes.FLOAT,
       allowNull: true,
+      field: "delta_time",
     },
   },
   {
-    tableName: "SyncContracts",
+    tableName: "sync_contracts",
     timestamps: false,
   }
 );
