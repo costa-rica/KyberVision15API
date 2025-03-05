@@ -1,5 +1,6 @@
 const express = require("express");
 const Player = require("../models/Player");
+const PlayerContract = require("../models/PlayerContract");
 const { authenticateToken } = require("../middleware/auth");
 const { checkBodyReturnMissing } = require("../modules/common");
 const router = express.Router();
@@ -139,31 +140,16 @@ router.delete("/:playerId", authenticateToken, async (req, res) => {
 
 router.get("/team/:teamId", authenticateToken, async (req, res) => {
   console.log("- accessed GET /players/team/:teamId");
-  res.json({ result: true });
+
+  const players = await Player.findAll({
+    include: {
+      model: PlayerContract,
+      where: { teamId: req.params.teamId },
+      attributes: ["id", "teamId", "playerId", "shirtNumber"], // Include PlayerContract fields
+    },
+  });
+
+  res.json({ result: true, players });
 });
-// router.post("/create", authenticateToken, async (req, res) => {
-//   console.log("- accessed POST /team/create_league");
-
-//   const checkBodyObj = checkBodyReturnMissing(req.body, [
-//     "firstName",
-//     "lastName",
-//     "birthDate",
-//   ]);
-//   if (!checkBodyObj.isValid) {
-//     return res.status(401).json({
-//       result: false,
-//       error: `Missing or empty fields: ${checkBodyObj.missingKeys}`,
-//     });
-//   }
-
-//   const { firstName, lastName, birthDate } = req.body;
-
-//   const newPlayer = await Player.create({
-//     firstName,
-//     lastName,
-//     birthDate,
-//   });
-//   res.json({ result: true, message: "Player created successfully" });
-// });
 
 module.exports = router;

@@ -205,51 +205,6 @@ router.get("/test", (req, res) => {
 // -----  Routes created specfically for Mobile -----------
 // #########################################################
 
-// router.post("/create", authenticateToken, async (req, res) => {
-//   const { teamName, city, coachName } = req.body;
-//   const user = req.user;
-//   console.log(
-//     `teamName: ${teamName}, city: ${city}, coachName: ${coachName}, userId: ${user.id}`
-//   );
-
-//   const checkBodyObj = checkBodyReturnMissing(req.body, [
-//     "teamName",
-//     "city",
-//     "coachName",
-//   ]);
-//   if (!checkBodyObj.isValid) {
-//     return res.status(400).json({
-//       result: false,
-//       error: `Missing or empty fields: ${checkBodyObj.missingKeys}`,
-//     });
-//   }
-
-//   try {
-//     // Check if the team already exists
-//     const existingTeam = await Team.findOne({
-//       where: { teamName, city, coachName },
-//     });
-
-//     if (existingTeam) {
-//       return res.status(409).json({
-//         result: false,
-//         error: "Team already exists in the database",
-//       });
-//     }
-
-//     // Create the new team if it doesn't exist
-//     const newTeam = await Team.create({ teamName, city, coachName });
-
-//     return res.json({ result: true, message: "Team created successfully" });
-//   } catch (error) {
-//     console.error("Error creating team:", error);
-//     return res.status(500).json({
-//       result: false,
-//       error: "Internal server error",
-//     });
-//   }
-// });
-
 router.post("/update-or-create", authenticateToken, async (req, res) => {
   try {
     const { id, teamName, city, coachName } = req.body;
@@ -319,30 +274,35 @@ router.delete("/:teamId", authenticateToken, async (req, res) => {
   }
 });
 
-// router.post("/create", authenticateToken, async (req, res) => {
-//   const { teamName, city, coachName } = req.body;
-//   const user = req.user;
-//   console.log(
-//     `teamName: ${teamName}, city: ${city}, coachName: ${coachName}, userId: ${user.id}`
-//   );
-//   const checkBodyObj = checkBodyReturnMissing(req.body, [
-//     "teamName",
-//     "city",
-//     "coachName",
-//   ]);
-//   if (!checkBodyObj.isValid) {
-//     return res.status(401).json({
-//       result: false,
-//       error: `Missing or empty fields: ${checkBodyObj.missingKeys}`,
-//     });
-//   }
+// GET /players/:teamId - Get all players for a specific team
+router.get("/players/:teamId", authenticateToken, async (req, res) => {
+  const { teamId } = req.params;
 
-//   const newTeam = await Team.create({
-//     teamName,
-//     city,
-//     coachName,
-//   });
-//   res.json({ result: true, message: "League created successfully" });
-// });
+  try {
+    // Check if the team exists
+    const team = await Team.findByPk(teamId);
+    if (!team) {
+      return res.status(404).json({ error: "Team not found" });
+    }
+
+    // Get players linked to the team via PlayerContract
+    const players = await Player.findAll({
+      include: [
+        {
+          model: PlayerContract,
+          required: true,
+          where: { teamId },
+          attributes: ["shirtNumber"], // Include shirt number in response
+        },
+      ],
+      attributes: ["id", "firstName", "lastName", "birthDate"],
+    });
+
+    return res.status(200).json(players);
+  } catch (error) {
+    console.error("Error fetching players:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 module.exports = router;

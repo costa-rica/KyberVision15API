@@ -1,5 +1,7 @@
 require("dotenv").config();
 const sequelize = require("./models/_connection");
+// const associations = require("./models/_associations");
+require("./models/_associations");
 var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
@@ -17,6 +19,7 @@ var syncContractsRouter = require("./routes/syncContracts");
 var teamsRouter = require("./routes/teams");
 var leaguesRouter = require("./routes/leagues");
 var adminDbRouter = require("./routes/adminDb");
+var playerContractsRouter = require("./routes/playerContracts");
 
 var app = express();
 const cors = require("cors");
@@ -40,6 +43,7 @@ app.use("/syncContracts", syncContractsRouter);
 app.use("/teams", teamsRouter);
 app.use("/leagues", leaguesRouter);
 app.use("/admin-db", adminDbRouter);
+app.use("/player-contracts", playerContractsRouter);
 
 // Increase payload size for large files
 app.use(express.json({ limit: "6gb" }));
@@ -49,7 +53,7 @@ app.use(express.urlencoded({ limit: "6gb", extended: true }));
 sequelize
   .sync()
   .then(() => {
-    console.log("Database connected & synced 🚀");
+    console.log("✅ Database connected & synced");
   })
   .catch((error) => console.error("Error syncing database:", error));
 

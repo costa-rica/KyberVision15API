@@ -15,4 +15,7 @@ console.log(
   )}`
 );
 
+// // Load associations
+// require("./associations");
+
 module.exports = sequelize;

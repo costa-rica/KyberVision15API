@@ -1,4 +1,4 @@
-// NR: refactored 2025-02-08
+// Modifed 2025-03-05
 const { DataTypes } = require("sequelize");
 const sequelize = require("./_connection");
 
