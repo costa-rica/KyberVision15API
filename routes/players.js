@@ -1,6 +1,7 @@
 const express = require("express");
 const Player = require("../models/Player");
 const PlayerContract = require("../models/PlayerContract");
+const Team = require("../models/Team");
 const { authenticateToken } = require("../middleware/auth");
 const { checkBodyReturnMissing } = require("../modules/common");
 const router = express.Router();
@@ -148,8 +149,30 @@ router.get("/team/:teamId", authenticateToken, async (req, res) => {
       attributes: ["id", "teamId", "playerId", "shirtNumber"], // Include PlayerContract fields
     },
   });
+  const team = await Team.findByPk(req.params.teamId);
+  console.log(team.teamName);
+  // console.log(team);
 
-  res.json({ result: true, players });
+  let playersArray = [];
+  if (players) {
+    let playerArrayObj = {};
+    console.log(`- we have players`);
+    players.map((player) => {
+      // console.log(player.get({ plain: true }));
+      playerArrayObj = {
+        id: player.id,
+        firstName: player.firstName,
+        lastName: player.lastName,
+        birthDate: player.birthDate,
+        shirtNumber: player.PlayerContracts[0].shirtNumber,
+      };
+      playersArray.push(playerArrayObj);
+    });
+  } else {
+    console.log(`- no players found`);
+  }
+
+  res.json({ result: true, team, players: playersArray });
 });
 
 module.exports = router;

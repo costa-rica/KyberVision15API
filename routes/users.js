@@ -34,7 +34,12 @@ router.post(
       email,
       created: new Date(),
     });
-
+    //TODO: Create GroupContract with PAVVB
+    await GroupContract.create({
+      userId: user.id,
+      teamId: 1,
+      // rightsFlags: 7,
+    });
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
       expiresIn: "5h",
     });
