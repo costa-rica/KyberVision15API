@@ -161,6 +161,10 @@ router.post("/receive-actions-array", authenticateToken, async (req, res) => {
         const newAction = Action.create({ ...actionObj });
       })
     );
+    console.log(`actionsArray[0]`);
+    console.log(JSON.stringify(actionsArray[0]));
+    console.log(actionsArray[0].timestamp);
+    console.log(typeof actionsArray[0].timestamp);
 
     res.json({
       result: true,

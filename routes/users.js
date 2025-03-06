@@ -2,6 +2,7 @@ var express = require("express");
 var router = express.Router();
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
+const GroupContract = require("../models/GroupContract");
 const { authenticateToken } = require("../middleware/auth");
 const jwt = require("jsonwebtoken");
 const { sendRegistrationEmail } = require("../modules/mailer");
