@@ -156,12 +156,16 @@ router.post("/receive-actions-array", authenticateToken, async (req, res) => {
         const actionObj = {
           ...elem,
           zone: 1,
+          syncContractId: newSyncContract.id,
         };
         const newAction = Action.create({ ...actionObj });
       })
     );
 
-    res.json({ result: true });
+    res.json({
+      result: true,
+      message: `Actions for scriptId: ${newScript.id}, syncContractId: ${newSyncContract.id}`,
+    });
   } catch (error) {
     console.error("Error in /receive-actions-array:", error);
     res.status(500).json({ result: false, error: "Internal Server Error" });
