@@ -54,7 +54,7 @@ const Action = sequelize.define(
   },
   {
     tableName: "actions",
-    timestamps: false,
+    // timestamps: false,
   }
 );
 

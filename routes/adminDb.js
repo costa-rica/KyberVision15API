@@ -45,11 +45,16 @@ const writeFileAsync = promisify(fs.writeFile);
 const { authenticateToken } = require("../middleware/auth");
 const { checkBodyReturnMissing } = require("../modules/common");
 
+const { readAndAppendDbTables } = require("../modules/adminDb");
+
 // upload data to database
 const multer = require("multer");
 const unzipper = require("unzipper");
-const csvParser = require("csv-parser");
-const upload = multer({ dest: "uploads/" }); // Temporary storage for file uploads
+// const csvParser = require("csv-parser");
+// const upload = multer({ dest: "uploads/" }); // Temporary storage for file uploads
+const upload = multer({
+  dest: path.join(process.env.PATH_PROJECT_RESOURCES, "uploads/"),
+}); // Temporary storage for file uploads
 
 router.get("/table/:tableName", async (req, res) => {
   try {
@@ -346,7 +351,6 @@ router.post(
           message: "Temporary directory not configured.",
         });
       }
-      //   console.log("** there is a file");
 
       const tempExtractPath = path.join(backupDir, "temp_db_import");
 
@@ -372,117 +376,43 @@ router.post(
       // Read all subfolders inside tempExtractPath
       const extractedFolders = await fs.promises.readdir(tempExtractPath);
 
-      // --- New check for .csv files
-
       // Find the correct folder that starts with "db_backup_"
       let backupFolder = extractedFolders.find(
         (folder) => folder.startsWith("db_backup_") && folder !== "__MACOSX"
       );
 
       // Determine the path where CSV files should be searched
-      let backupFolderPath;
-      if (backupFolder) {
-        backupFolderPath = path.join(tempExtractPath, backupFolder);
-        console.log(`Found backup folder: ${backupFolderPath}`);
-      } else {
-        // If no "db_backup_" folder, assume CSVs are in the root
-        backupFolderPath = tempExtractPath;
-        console.log("No 'db_backup_' folder found. Using root directory.");
-      }
+      let backupFolderPath = backupFolder
+        ? path.join(tempExtractPath, backupFolder)
+        : tempExtractPath;
 
-      // Get the actual .csv files inside the determined directory
-      const csvFiles = await fs.promises.readdir(backupFolderPath);
+      console.log(`Using backup folder: ${backupFolderPath}`);
 
-      for (const file of csvFiles) {
-        if (!file.endsWith(".csv")) continue; // Skip non-CSV files
+      // Call the new function to read and append database tables
+      const status = await readAndAppendDbTables(backupFolderPath);
 
-        const tableName = file.replace(".csv", "");
-        if (!models[tableName]) {
-          console.log(`Skipping ${file}, no matching table found.`);
-          continue;
-        }
-
-        console.log(`Importing data into table: ${tableName}`);
-        const filePath = path.join(backupFolderPath, file);
-        const records = [];
-
-        // Read CSV file
-        await new Promise((resolve, reject) => {
-          fs.createReadStream(filePath)
-            .pipe(csvParser())
-            .on("data", (row) => records.push(row))
-            .on("end", resolve)
-            .on("error", reject);
-        });
-
-        if (records.length > 0) {
-          await models[tableName].bulkCreate(records, {
-            ignoreDuplicates: true,
-          });
-          console.log(`Imported ${records.length} records into ${tableName}`);
-        } else {
-          console.log(`No records found in ${file}`);
-        }
-      }
-
-      //--- END new
-
-      //   // Find the correct folder that starts with "db_backup_"
-      //   const backupFolder = extractedFolders.find(
-      //     (folder) => folder.startsWith("db_backup_") && folder !== "__MACOSX"
-      //   );
-
-      //   if (!backupFolder) {
-      //     throw new Error("No valid backup folder found in extracted files.");
-      //   }
-
-      //   // Get the full path to the backup folder
-      //   const backupFolderPath = path.join(tempExtractPath, backupFolder);
-
-      //   // Get the actual .csv files inside the "db_backup_" folder
-      //   const csvFiles = await fs.promises.readdir(backupFolderPath);
-
-      //   for (const file of csvFiles) {
-      //     if (!file.endsWith(".csv")) continue; // Skip non-CSV files
-
-      //     const tableName = file.replace(".csv", "");
-      //     if (!models[tableName]) {
-      //       console.log(`Skipping ${file}, no matching table found.`);
-      //       continue;
-      //     }
-
-      //     console.log(`Importing data into table: ${tableName}`);
-      //     const filePath = path.join(backupFolderPath, file);
-      //     const records = [];
-
-      //     // Read CSV file
-      //     await new Promise((resolve, reject) => {
-      //       fs.createReadStream(filePath)
-      //         .pipe(csvParser())
-      //         .on("data", (row) => records.push(row))
-      //         .on("end", resolve)
-      //         .on("error", reject);
-      //     });
-
-      //     if (records.length > 0) {
-      //       await models[tableName].bulkCreate(records, {
-      //         ignoreDuplicates: true,
-      //       });
-      //       console.log(`Imported ${records.length} records into ${tableName}`);
-      //     } else {
-      //       console.log(`No records found in ${file}`);
-      //     }
-      //   }
-
-      //   Clean up temporary files
+      // Clean up temporary files
       await fs.promises.rm(tempExtractPath, { recursive: true });
       await fs.promises.unlink(req.file.path);
+      await fs.promises.rm(
+        path.join(process.env.PATH_PROJECT_RESOURCES, "uploads/"),
+        { recursive: true }
+      );
       console.log("Temporary files deleted.");
 
-      res.json({
-        result: true,
-        message: "Database backup imported successfully.",
-      });
+      console.log(status);
+      if (status?.failedOnTableName) {
+        res.status(500).json({
+          result: false,
+          error: status.error,
+          failedOnTableName: status.failedOnTableName,
+        });
+      } else {
+        res.json({
+          result: status.success,
+          message: status.message,
+        });
+      }
     } catch (error) {
       console.error("Error importing database backup:", error);
       res.status(500).json({
@@ -493,5 +423,129 @@ router.post(
     }
   }
 );
+
+// router.post(
+//   "/import-db-backup",
+//   authenticateToken,
+//   upload.single("backupFile"),
+//   async (req, res) => {
+//     console.log("- in POST /admin-db/import-db-backup");
+
+//     try {
+//       if (!req.file) {
+//         return res
+//           .status(400)
+//           .json({ result: false, message: "No file uploaded." });
+//       }
+
+//       const backupDir = process.env.PATH_PROJECT_RESOURCES;
+//       if (!backupDir) {
+//         console.log("*** no file ***");
+//         return res.status(500).json({
+//           result: false,
+//           message: "Temporary directory not configured.",
+//         });
+//       }
+//       //   console.log("** there is a file");
+
+//       const tempExtractPath = path.join(backupDir, "temp_db_import");
+
+//       // Ensure the temp_db_import folder is clean before extracting
+//       if (fs.existsSync(tempExtractPath)) {
+//         console.log("Previous temp_db_import folder found. Deleting...");
+//         await fs.promises.rm(tempExtractPath, { recursive: true });
+//         console.log("Old temp_db_import folder deleted.");
+//       }
+
+//       await mkdirAsync(tempExtractPath, { recursive: true });
+
+//       console.log(`Extracting backup to: ${tempExtractPath}`);
+
+//       // Unzip the uploaded file
+//       await fs
+//         .createReadStream(req.file.path)
+//         .pipe(unzipper.Extract({ path: tempExtractPath }))
+//         .promise();
+
+//       console.log("Backup extracted successfully.");
+
+//       // Read all subfolders inside tempExtractPath
+//       const extractedFolders = await fs.promises.readdir(tempExtractPath);
+
+//       // --- New check for .csv files
+
+//       // Find the correct folder that starts with "db_backup_"
+//       let backupFolder = extractedFolders.find(
+//         (folder) => folder.startsWith("db_backup_") && folder !== "__MACOSX"
+//       );
+
+//       // Determine the path where CSV files should be searched
+//       let backupFolderPath;
+//       if (backupFolder) {
+//         backupFolderPath = path.join(tempExtractPath, backupFolder);
+//         console.log(`Found backup folder: ${backupFolderPath}`);
+//       } else {
+//         // If no "db_backup_" folder, assume CSVs are in the root
+//         backupFolderPath = tempExtractPath;
+//         console.log("No 'db_backup_' folder found. Using root directory.");
+//       }
+
+//       /// Move to function
+//       // // Get the actual .csv files inside the determined directory
+//       // const csvFiles = await fs.promises.readdir(backupFolderPath);
+
+//       // for (const file of csvFiles) {
+//       //   if (!file.endsWith(".csv")) continue; // Skip non-CSV files
+
+//       //   const tableName = file.replace(".csv", "");
+//       //   if (!models[tableName]) {
+//       //     console.log(`Skipping ${file}, no matching table found.`);
+//       //     continue;
+//       //   }
+
+//       //   console.log(`Importing data into table: ${tableName}`);
+//       //   const filePath = path.join(backupFolderPath, file);
+//       //   const records = [];
+
+//       //   // Read CSV file
+//       //   await new Promise((resolve, reject) => {
+//       //     fs.createReadStream(filePath)
+//       //       .pipe(csvParser())
+//       //       .on("data", (row) => records.push(row))
+//       //       .on("end", resolve)
+//       //       .on("error", reject);
+//       //   });
+
+//       //   if (records.length > 0) {
+//       //     await models[tableName].bulkCreate(records, {
+//       //       ignoreDuplicates: true,
+//       //     });
+//       //     console.log(`Imported ${records.length} records into ${tableName}`);
+//       //   } else {
+//       //     console.log(`No records found in ${file}`);
+//       //   }
+
+//       const status = await readAndAppendDbTables(backupFolderPath)
+//       }
+
+//       //   Clean up temporary files
+//       await fs.promises.rm(tempExtractPath, { recursive: true });
+//       await fs.promises.unlink(req.file.path);
+//       console.log("Temporary files deleted.");
+
+//       res.json({
+//         result: true,
+//         message: "Database backup imported successfully.",
+//       });
+//     } catch (error) {
+//       console.error("Error importing database backup:", error);
+//       res.status(500).json({
+//         result: false,
+//         message: "Internal server error",
+//         error: error.message,
+//       });
+//     }
+//   }
+// );
 
 module.exports = router;

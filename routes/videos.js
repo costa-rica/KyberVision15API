@@ -6,6 +6,7 @@ const Match = require("../models/Match");
 const { upload, deleteVideo } = require("../modules/videoProcessing");
 const path = require("path");
 const fs = require("fs");
+const { getMatchWithTeams } = require("../modules/match");
 
 // 🔹 Upload Video (POST /upload)
 router.post(
@@ -63,19 +64,25 @@ router.post(
   }
 );
 
-// 🔹 Get All Videos with Match Data (GET /)
-router.get("/", async (req, res) => {
+// 🔹 Get All Videos with Match Data (GET /videos/)
+router.get("/", authenticateToken, async (req, res) => {
   console.log(`- in GET /api/videos`);
   try {
-    // Fetch all videos with their associated match data
-    const videos = await Video.findAll({
-      include: {
-        model: Match,
-        as: "match", // Alias should match the association
-      },
-    });
+    // Fetch all videos with associated match data
+    const videos = await Video.findAll();
 
-    res.json({ result: true, videos });
+    // Process videos to include match & team details
+    const formattedVideos = await Promise.all(
+      videos.map(async (video) => {
+        const matchData = await getMatchWithTeams(video.matchId);
+        return {
+          ...video.get(), // Extract raw video data
+          match: matchData.success ? matchData.match : null, // Include match data if successful
+        };
+      })
+    );
+
+    res.json({ result: true, videos: formattedVideos });
   } catch (error) {
     console.error("Error fetching videos:", error);
     res.status(500).json({
@@ -85,6 +92,7 @@ router.get("/", async (req, res) => {
     });
   }
 });
+
 // // 🔹 Get All Videos (GET /)
 // router.get("/", async (req, res) => {
 //   console.log(`- in GET /api/videos`);
@@ -104,7 +112,7 @@ router.get("/", async (req, res) => {
 // });
 
 // 🔹 Get Video by ID (GET /:videoId) downloads /shows actual video
-router.get("/:videoId", async (req, res) => {
+router.get("/:videoId", authenticateToken, async (req, res) => {
   console.log(" in GET /videos/:videoIs");
   console.log(req.params.filename);
   const videoId = req.params.videoId;

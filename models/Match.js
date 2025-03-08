@@ -46,7 +46,7 @@ const Match = sequelize.define(
   },
   {
     tableName: "matches",
-    timestamps: false,
+    // timestamps: false,
   }
 );
 
