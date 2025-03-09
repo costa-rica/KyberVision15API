@@ -17,6 +17,7 @@ const Video = sequelize.define(
         model: Match,
         key: "id",
       },
+      field: "match_id",
     },
     filename: {
       type: DataTypes.STRING,
@@ -24,7 +25,10 @@ const Video = sequelize.define(
     },
     url: {
       type: DataTypes.STRING,
-      allowNull: false,
+    },
+    videoFileCreatedDateTimeEstimate: {
+      type: DataTypes.DATE,
+      field: "video_file_created_date_time_estimate",
     },
   },
   {
@@ -32,8 +36,7 @@ const Video = sequelize.define(
   }
 );
 
-// Association: Each Video belongs to a Match
-Video.belongsTo(Match, { foreignKey: "matchId", as: "match" });
-// Video.belongsTo(Match, { foreignKey: "id", as: "match" });
+// // Association: Each Video belongs to a Match
+// Video.belongsTo(Match, { foreignKey: "matchId", as: "match" });
 
 module.exports = Video;

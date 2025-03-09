@@ -160,7 +160,7 @@ router.post(
       return res.status(401).json({ error: "Mot de passe incorrect." });
     }
 
-    await user.update({ lastAccessDate: new Date() });
+    await user.update({ updatedAt: new Date() });
 
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
       expiresIn: "5h",

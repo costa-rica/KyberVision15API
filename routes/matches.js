@@ -158,7 +158,9 @@ router.post(
   }
 );
 
-// ----- Mobile Routes------
+// #########################################################
+// -----  Routes created specfically for Mobile -----------
+// #########################################################
 router.post("/update-or-create", authenticateToken, async (req, res) => {
   try {
     const {

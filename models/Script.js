@@ -20,11 +20,6 @@ const Script = sequelize.define(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
-    lastAccessDate: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      field: "last_access_date",
-    },
   },
   {
     tableName: "scripts",

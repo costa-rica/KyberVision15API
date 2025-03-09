@@ -53,7 +53,8 @@ const unzipper = require("unzipper");
 // const csvParser = require("csv-parser");
 // const upload = multer({ dest: "uploads/" }); // Temporary storage for file uploads
 const upload = multer({
-  dest: path.join(process.env.PATH_PROJECT_RESOURCES, "uploads/"),
+  // dest: path.join(process.env.PATH_PROJECT_RESOURCES, "uploads/"),
+  dest: path.join(process.env.PATH_PROJECT_RESOURCES, "uploads-delete-ok/"),
 }); // Temporary storage for file uploads
 
 router.get("/table/:tableName", async (req, res) => {
@@ -394,10 +395,10 @@ router.post(
       // Clean up temporary files
       await fs.promises.rm(tempExtractPath, { recursive: true });
       await fs.promises.unlink(req.file.path);
-      await fs.promises.rm(
-        path.join(process.env.PATH_PROJECT_RESOURCES, "uploads/"),
-        { recursive: true }
-      );
+      // await fs.promises.rm(
+      //   path.join(process.env.PATH_PROJECT_RESOURCES, "uploads/"),
+      //   { recursive: true }
+      // );
       console.log("Temporary files deleted.");
 
       console.log(status);

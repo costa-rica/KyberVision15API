@@ -176,4 +176,11 @@ router.post("/receive-actions-array", authenticateToken, async (req, res) => {
   }
 });
 
+router.get("/send-actions", authenticateToken, async (req, res) => {
+  // 1. Get script syncContract row delta time
+  // 2. create actionsArray from actions scriptId
+  // 3. create a difference between script.date - video
+  // 3. for each action in actionsArray, create a timestampeModified property that is timestamp - syncContract.delta_time
+});
+
 module.exports = router;

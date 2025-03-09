@@ -24,20 +24,10 @@ const User = sequelize.define(
       allowNull: false,
       unique: true,
     },
-    created: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-    lastAccessDate: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      field: "last_access_date",
-    },
   },
   {
     tableName: "users",
-    timestamps: false,
+    // timestamps: false,
   }
 );
 
