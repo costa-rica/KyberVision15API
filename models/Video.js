@@ -30,13 +30,14 @@ const Video = sequelize.define(
       type: DataTypes.DATE,
       field: "video_file_created_date_time_estimate",
     },
+    videoFileSizeInMb: {
+      type: DataTypes.FLOAT,
+      field: "video_file_size_in_mb",
+    },
   },
   {
     tableName: "videos",
   }
 );
-
-// // Association: Each Video belongs to a Match
-// Video.belongsTo(Match, { foreignKey: "matchId", as: "match" });
 
 module.exports = Video;

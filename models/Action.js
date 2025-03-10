@@ -45,7 +45,6 @@ const Action = sequelize.define(
     timestamp: {
       type: DataTypes.DATE,
       allowNull: false,
-      // defaultValue: DataTypes.NOW,
     },
     zone: {
       type: DataTypes.STRING,
@@ -54,7 +53,6 @@ const Action = sequelize.define(
   },
   {
     tableName: "actions",
-    // timestamps: false,
   }
 );
 

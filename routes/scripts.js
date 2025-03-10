@@ -4,6 +4,7 @@ const router = express.Router();
 const Script = require("../models/Script");
 const Action = require("../models/Action");
 const SyncContract = require("../models/SyncContract");
+const Video = require("../models/Video");
 
 const { authenticateToken } = require("../middleware/auth");
 const { checkBodyReturnMissing } = require("../modules/common");
@@ -176,11 +177,77 @@ router.post("/receive-actions-array", authenticateToken, async (req, res) => {
   }
 });
 
-router.get("/send-actions", authenticateToken, async (req, res) => {
-  // 1. Get script syncContract row delta time
-  // 2. create actionsArray from actions scriptId
-  // 3. create a difference between script.date - video
-  // 3. for each action in actionsArray, create a timestampeModified property that is timestamp - syncContract.delta_time
+// router.get("/send-actions/:scriptId", authenticateToken, async (req, res) => {
+//   // 1. Get script syncContract row delta time
+//   const { scriptId } = req.params;
+//   const actions = await Action.findAll({
+//     include: {
+//       model: SyncContract,
+//       where: { scriptId },
+//     },
+//   });
+//   // 2. create actionsArray from actions scriptId
+//   // 3. create a difference between script.date - video
+//   // 3. for each action in actionsArray, create a timestampeModified property that is timestamp - syncContract.delta_time
+//   res.json({ result: true, actionsArray: actions });
+// });
+
+// 🔹 Get all actions for a script
+router.get("/:scriptId/actions", authenticateToken, async (req, res) => {
+  console.log(`- in GET /scripts/${req.params.scriptId}/actions`);
+
+  try {
+    const { scriptId } = req.params;
+    // Find all SyncContracts linked to the given scriptId
+    const syncContract = await SyncContract.findOne({
+      where: { scriptId },
+    });
+
+    if (!syncContract) {
+      return res
+        .status(404)
+        .json({ result: false, message: "No actions found for this script." });
+    }
+    // 🔹 Find the Video associated with this SyncContract
+    const video = await Video.findOne({
+      where: { id: syncContract.videoId },
+    });
+
+    if (!video || !video.videoFileCreatedDateTimeEstimate) {
+      return res.status(404).json({
+        result: false,
+        message: "No valid video file creation date found.",
+      });
+    }
+
+    // Convert videoFileCreatedDateTimeEstimate to a Date object
+    const videoCreatedDate = new Date(video.videoFileCreatedDateTimeEstimate);
+
+    // Find all Actions linked to these SyncContracts
+    const actions = await Action.findAll({
+      where: { syncContractId: syncContract.id },
+      order: [["timestamp", "ASC"]], // Sort by timestamp for better readability
+    });
+
+    // 🔹 Compute `timestampModified` for each action
+    const modifiedActions = actions.map((action) => {
+      const actionTimestamp = new Date(action.timestamp);
+      return {
+        ...action.get(), // Get plain object representation of Sequelize instance
+        timestampOriginal: action.timestamp,
+        timestamp: (actionTimestamp - videoCreatedDate) / 1000, // Difference in seconds
+      };
+    });
+
+    res.json({ result: true, actionsArray: modifiedActions });
+  } catch (error) {
+    console.error("Error fetching actions for script:", error);
+    res.status(500).json({
+      result: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
 });
 
 module.exports = router;
