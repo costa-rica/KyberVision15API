@@ -41,11 +41,14 @@ const archiver = require("archiver");
 const { Parser } = require("json2csv");
 // Promisify fs functions
 const mkdirAsync = promisify(fs.mkdir);
-const writeFileAsync = promisify(fs.writeFile);
+// const writeFileAsync = promisify(fs.writeFile);
 const { authenticateToken } = require("../middleware/auth");
 const { checkBodyReturnMissing } = require("../modules/common");
 
-const { readAndAppendDbTables } = require("../modules/adminDb");
+const {
+  readAndAppendDbTables,
+  createDatabaseBackupZipFile,
+} = require("../modules/adminDb");
 
 // upload data to database
 const multer = require("multer");
@@ -87,94 +90,14 @@ router.get("/create-database-backup", authenticateToken, async (req, res) => {
   console.log(`- in GET /admin-db/create-database-backup`);
 
   try {
-    // Generate timestamped folder name
-    const timestamp = new Date()
-      .toISOString()
-      .replace(/[-T:.Z]/g, "")
-      .slice(0, 15);
-    console.log(`timestamp: ${timestamp}`);
+    const zipFilePath = await createDatabaseBackupZipFile();
+    console.log(`Backup zip created: ${zipFilePath}`);
 
-    const backupDir = path.join(
-      process.env.PATH_DB_BACKUPS,
-      `db_backup_${timestamp}`
-    );
-    console.log(`backupDir: ${backupDir}`);
-
-    // Create backup directory
-    await mkdirAsync(backupDir, { recursive: true });
-
-    console.log(`Backup directory created: ${backupDir}`);
-
-    let hasData = false; // Flag to check if at least one table has data
-
-    // Iterate through all models (tables)
-    for (const tableName in models) {
-      if (models.hasOwnProperty(tableName)) {
-        console.log(`Checking table: ${tableName}`);
-
-        // Fetch all records from the table
-        const records = await models[tableName].findAll({ raw: true });
-
-        // Skip tables with no data
-        if (records.length === 0) {
-          console.log(`Skipping ${tableName}, no data found.`);
-          continue;
-        }
-
-        console.log(`Backing up table: ${tableName}`);
-
-        // Convert records to CSV
-        const json2csvParser = new Parser();
-        const csvData = json2csvParser.parse(records);
-
-        // Write CSV file
-        const filePath = path.join(backupDir, `${tableName}.csv`);
-        await writeFileAsync(filePath, csvData);
-        console.log(`CSV file created: ${filePath}`);
-
-        hasData = true; // Set flag to true since we wrote a file
-      }
-    }
-
-    // If no tables had data, delete the empty backup directory and return response
-    if (!hasData) {
-      console.log("No tables had data. Skipping ZIP creation.");
-      await fs.promises.rmdir(backupDir, { recursive: true });
-      return res.json({
-        result: false,
-        message: "No data found in any tables. Backup skipped.",
-      });
-    }
-
-    // Create zip archive
-    const zipFileName = `db_backup_${timestamp}.zip`;
-    const zipFilePath = path.join(
-      process.env.PATH_DB_BACKUPS || __dirname,
-      zipFileName
-    );
-    const output = fs.createWriteStream(zipFilePath);
-    const archive = archiver("zip", { zlib: { level: 9 } });
-
-    output.on("close", () => {
-      console.log(
-        `Backup zip created: ${zipFilePath} (${archive.pointer()} total bytes)`
-      );
-      res.json({
-        result: true,
-        message: "Database backup completed",
-        backupFile: zipFilePath,
-      });
+    res.json({
+      result: true,
+      message: "Database backup completed",
+      backupFile: zipFilePath,
     });
-
-    archive.on("error", (err) => {
-      throw err;
-    });
-
-    archive.pipe(output);
-    archive.directory(backupDir, false);
-    await archive.finalize();
-    await fs.promises.rmdir(backupDir, { recursive: true });
-    console.log(`Deleted unzipped backup folder: ${backupDir}`);
   } catch (error) {
     console.error("Error creating database backup:", error);
     res.status(500).json({
