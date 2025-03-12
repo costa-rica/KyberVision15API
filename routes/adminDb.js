@@ -44,7 +44,7 @@ const mkdirAsync = promisify(fs.mkdir);
 // const writeFileAsync = promisify(fs.writeFile);
 const { authenticateToken } = require("../middleware/auth");
 const { checkBodyReturnMissing } = require("../modules/common");
-
+const unlinkAsync = promisify(fs.unlink);
 const {
   readAndAppendDbTables,
   createDatabaseBackupZipFile,
@@ -53,14 +53,11 @@ const {
 // upload data to database
 const multer = require("multer");
 const unzipper = require("unzipper");
-// const csvParser = require("csv-parser");
-// const upload = multer({ dest: "uploads/" }); // Temporary storage for file uploads
 const upload = multer({
-  // dest: path.join(process.env.PATH_PROJECT_RESOURCES, "uploads/"),
   dest: path.join(process.env.PATH_PROJECT_RESOURCES, "uploads-delete-ok/"),
 }); // Temporary storage for file uploads
 
-router.get("/table/:tableName", async (req, res) => {
+router.get("/table/:tableName", authenticateToken, async (req, res) => {
   try {
     const { tableName } = req.params;
     console.log(`- in GET /admin-db/table/${tableName}`);
@@ -177,49 +174,6 @@ router.get("/send-db-backup/:filename", authenticateToken, async (req, res) => {
     });
   }
 });
-
-router.delete(
-  "/delete-db-backup/:filename",
-  authenticateToken,
-  async (req, res) => {
-    console.log(
-      `- in DELETE /admin-db/delete-db-backup/${req.params.filename}`
-    );
-
-    try {
-      const { filename } = req.params;
-      const backupDir = process.env.PATH_DB_BACKUPS;
-
-      if (!backupDir) {
-        return res
-          .status(500)
-          .json({ result: false, message: "Backup directory not configured." });
-      }
-
-      const filePath = path.join(backupDir, filename);
-
-      // Check if file exists
-      if (!fs.existsSync(filePath)) {
-        return res
-          .status(404)
-          .json({ result: false, message: "File not found." });
-      }
-
-      // Delete the file
-      await fs.promises.unlink(filePath);
-      console.log(`Deleted file: ${filePath}`);
-
-      res.json({ result: true, message: "Backup file deleted successfully." });
-    } catch (error) {
-      console.error("Error deleting backup file:", error);
-      res.status(500).json({
-        result: false,
-        message: "Internal server error",
-        error: error.message,
-      });
-    }
-  }
-);
 
 router.get("/db-row-counts-by-table", authenticateToken, async (req, res) => {
   console.log(`- in GET /admin-db/db-row-counts-by-table`);
@@ -348,128 +302,121 @@ router.post(
   }
 );
 
-// router.post(
-//   "/import-db-backup",
-//   authenticateToken,
-//   upload.single("backupFile"),
-//   async (req, res) => {
-//     console.log("- in POST /admin-db/import-db-backup");
+router.delete(
+  "/delete-db-backup/:filename",
+  authenticateToken,
+  async (req, res) => {
+    console.log(
+      `- in DELETE /admin-db/delete-db-backup/${req.params.filename}`
+    );
 
-//     try {
-//       if (!req.file) {
-//         return res
-//           .status(400)
-//           .json({ result: false, message: "No file uploaded." });
-//       }
+    try {
+      const { filename } = req.params;
+      const backupDir = process.env.PATH_DB_BACKUPS;
 
-//       const backupDir = process.env.PATH_PROJECT_RESOURCES;
-//       if (!backupDir) {
-//         console.log("*** no file ***");
-//         return res.status(500).json({
-//           result: false,
-//           message: "Temporary directory not configured.",
-//         });
-//       }
-//       //   console.log("** there is a file");
+      if (!backupDir) {
+        return res
+          .status(500)
+          .json({ result: false, message: "Backup directory not configured." });
+      }
 
-//       const tempExtractPath = path.join(backupDir, "temp_db_import");
+      const filePath = path.join(backupDir, filename);
 
-//       // Ensure the temp_db_import folder is clean before extracting
-//       if (fs.existsSync(tempExtractPath)) {
-//         console.log("Previous temp_db_import folder found. Deleting...");
-//         await fs.promises.rm(tempExtractPath, { recursive: true });
-//         console.log("Old temp_db_import folder deleted.");
-//       }
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        return res
+          .status(404)
+          .json({ result: false, message: "File not found." });
+      }
 
-//       await mkdirAsync(tempExtractPath, { recursive: true });
+      // Delete the file
+      await fs.promises.unlink(filePath);
+      console.log(`Deleted file: ${filePath}`);
 
-//       console.log(`Extracting backup to: ${tempExtractPath}`);
+      res.json({ result: true, message: "Backup file deleted successfully." });
+    } catch (error) {
+      console.error("Error deleting backup file:", error);
+      res.status(500).json({
+        result: false,
+        message: "Internal server error",
+        error: error.message,
+      });
+    }
+  }
+);
 
-//       // Unzip the uploaded file
-//       await fs
-//         .createReadStream(req.file.path)
-//         .pipe(unzipper.Extract({ path: tempExtractPath }))
-//         .promise();
+// 🔹 DELETE route to remove the entire database
+router.delete("/the-entire-database", authenticateToken, async (req, res) => {
+  console.log("- in DELETE /admin-db/the-entire-database");
 
-//       console.log("Backup extracted successfully.");
+  try {
+    // Create a backup before deletion
+    console.log("Creating database backup before deletion...");
+    const backupPath = await createDatabaseBackupZipFile(
+      (suffix = "_last_before_db_delete")
+    );
+    console.log(`Backup created at: ${backupPath}`);
 
-//       // Read all subfolders inside tempExtractPath
-//       const extractedFolders = await fs.promises.readdir(tempExtractPath);
+    // Get database path and name from environment variables
+    const dbPath = process.env.PATH_DATABASE;
+    const dbName = process.env.NAME_DB;
+    const fullDbPath = path.join(dbPath, dbName);
 
-//       // --- New check for .csv files
+    // Check if the database file exists
+    if (!fs.existsSync(fullDbPath)) {
+      return res.status(404).json({
+        result: false,
+        message: "Database file not found.",
+      });
+    }
 
-//       // Find the correct folder that starts with "db_backup_"
-//       let backupFolder = extractedFolders.find(
-//         (folder) => folder.startsWith("db_backup_") && folder !== "__MACOSX"
-//       );
+    // Delete the database file
+    await unlinkAsync(fullDbPath);
+    console.log(`Database file deleted: ${fullDbPath}`);
 
-//       // Determine the path where CSV files should be searched
-//       let backupFolderPath;
-//       if (backupFolder) {
-//         backupFolderPath = path.join(tempExtractPath, backupFolder);
-//         console.log(`Found backup folder: ${backupFolderPath}`);
-//       } else {
-//         // If no "db_backup_" folder, assume CSVs are in the root
-//         backupFolderPath = tempExtractPath;
-//         console.log("No 'db_backup_' folder found. Using root directory.");
-//       }
+    res.json({
+      result: true,
+      message: "Database successfully deleted.",
+      backupFile: backupPath,
+    });
+  } catch (error) {
+    console.error("Error deleting the database:", error);
+    res.status(500).json({
+      result: false,
+      message: "Internal server error.",
+      error: error.message,
+    });
+  }
+});
 
-//       /// Move to function
-//       // // Get the actual .csv files inside the determined directory
-//       // const csvFiles = await fs.promises.readdir(backupFolderPath);
+// 🔹 DELETE route to remove a specific table
+router.delete("/table/:tableName", authenticateToken, async (req, res) => {
+  try {
+    const { tableName } = req.params;
+    console.log(`- in DELETE /admin-db/table/${tableName}`);
 
-//       // for (const file of csvFiles) {
-//       //   if (!file.endsWith(".csv")) continue; // Skip non-CSV files
+    // Check if the requested table exists in the models
+    if (!models[tableName]) {
+      return res
+        .status(400)
+        .json({ result: false, message: `Table '${tableName}' not found.` });
+    }
 
-//       //   const tableName = file.replace(".csv", "");
-//       //   if (!models[tableName]) {
-//       //     console.log(`Skipping ${file}, no matching table found.`);
-//       //     continue;
-//       //   }
+    // Delete all records from the table
+    await models[tableName].destroy({ where: {}, truncate: true });
 
-//       //   console.log(`Importing data into table: ${tableName}`);
-//       //   const filePath = path.join(backupFolderPath, file);
-//       //   const records = [];
-
-//       //   // Read CSV file
-//       //   await new Promise((resolve, reject) => {
-//       //     fs.createReadStream(filePath)
-//       //       .pipe(csvParser())
-//       //       .on("data", (row) => records.push(row))
-//       //       .on("end", resolve)
-//       //       .on("error", reject);
-//       //   });
-
-//       //   if (records.length > 0) {
-//       //     await models[tableName].bulkCreate(records, {
-//       //       ignoreDuplicates: true,
-//       //     });
-//       //     console.log(`Imported ${records.length} records into ${tableName}`);
-//       //   } else {
-//       //     console.log(`No records found in ${file}`);
-//       //   }
-
-//       const status = await readAndAppendDbTables(backupFolderPath)
-//       }
-
-//       //   Clean up temporary files
-//       await fs.promises.rm(tempExtractPath, { recursive: true });
-//       await fs.promises.unlink(req.file.path);
-//       console.log("Temporary files deleted.");
-
-//       res.json({
-//         result: true,
-//         message: "Database backup imported successfully.",
-//       });
-//     } catch (error) {
-//       console.error("Error importing database backup:", error);
-//       res.status(500).json({
-//         result: false,
-//         message: "Internal server error",
-//         error: error.message,
-//       });
-//     }
-//   }
-// );
+    res.json({
+      result: true,
+      message: `Table '${tableName}' has been deleted.`,
+    });
+  } catch (error) {
+    console.error("Error deleting table:", error);
+    res.status(500).json({
+      result: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+});
 
 module.exports = router;

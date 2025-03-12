@@ -137,7 +137,8 @@ async function readAndAppendDbTables(backupFolderPath) {
   }
 }
 
-async function createDatabaseBackupZipFile() {
+async function createDatabaseBackupZipFile(suffix = "") {
+  console.log(`suffix: ${suffix}`);
   try {
     const timestamp = new Date()
       .toISOString()
@@ -146,8 +147,9 @@ async function createDatabaseBackupZipFile() {
 
     const backupDir = path.join(
       process.env.PATH_DB_BACKUPS,
-      `db_backup_${timestamp}`
+      `db_backup_${timestamp}${suffix}`
     );
+    console.log(`Backup directory: ${backupDir}`);
     await mkdirAsync(backupDir, { recursive: true });
 
     let hasData = false;
@@ -171,7 +173,7 @@ async function createDatabaseBackupZipFile() {
       throw new Error("No data found in any tables. Backup skipped.");
     }
 
-    const zipFileName = `db_backup_${timestamp}.zip`;
+    const zipFileName = `db_backup_${timestamp}${suffix}.zip`;
     const zipFilePath = path.join(process.env.PATH_DB_BACKUPS, zipFileName);
     const output = fs.createWriteStream(zipFilePath);
     const archive = archiver("zip", { zlib: { level: 9 } });
