@@ -57,28 +57,4 @@ const sendRegistrationEmail = async (toEmail, name) => {
   }
 };
 
-// // Function to send a registration email
-// const sendRegistrationEmail = async (toEmail, name) => {
-//   try {
-//     const mailOptions = {
-//       from: process.env.ADMIN_EMAIL_ADDRESS, // Must be the same as the authenticated user
-//       to: toEmail,
-//       subject: "Confirm Your Registration",
-//       html: `
-//                 <h2>Welcome, ${name}!</h2>
-//                 <p>Thank you for registering to Kyber Vision !</p>
-
-//                 <p>If you did not request this, please ignore this email.</p>
-//             `,
-//     };
-
-//     const info = await transporter.sendMail(mailOptions);
-//     console.log("Email sent:", info.response);
-//     return info;
-//   } catch (error) {
-//     console.error("Error sending email:", error);
-//     throw error;
-//   }
-// };
-
 module.exports = { sendRegistrationEmail };

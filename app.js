@@ -49,12 +49,24 @@ app.use("/player-contracts", playerContractsRouter);
 app.use(express.json({ limit: "6gb" }));
 app.use(express.urlencoded({ limit: "6gb", extended: true }));
 
-// Sync database and start server
+const { onStartUpCreateEnvUsers } = require("./modules/onStartUp");
+
+// Sync database and then create environment users
 sequelize
   .sync()
-  .then(() => {
+  .then(async () => {
     console.log("✅ Database connected & synced");
+    await onStartUpCreateEnvUsers(); // <-- Call function here
   })
-  .catch((error) => console.error("Error syncing database:", error));
+  .catch((error) => console.error("❌ Error syncing database:", error));
+
+// // Sync database and start server
+// sequelize
+//   .sync()
+//   .then(() => {
+//     console.log("✅ Database connected & synced");
+//     await onAppLaunchCreateEnvUsers(); // <-- Call function here
+//   })
+//   .catch((error) => console.error("Error syncing database:", error));
 
 module.exports = app;

@@ -1,4 +1,3 @@
-// NR: refactored 2025-02-08
 const { DataTypes } = require("sequelize");
 const sequelize = require("./_connection");
 
@@ -23,6 +22,10 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
+    },
+    isAdminForKvManagerWebsite: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
   },
   {

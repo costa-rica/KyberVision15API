@@ -70,7 +70,8 @@ router.get("/table/:tableName", authenticateToken, async (req, res) => {
     }
 
     // Fetch all records from the table
-    const tableData = await models[tableName].findAll();
+    const tableData = (await models[tableName].findAll()) || [];
+    // console.log(`Fetched data from ${tableName}:`, tableData);
 
     res.json({ result: true, data: tableData });
   } catch (error) {
