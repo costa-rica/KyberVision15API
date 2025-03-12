@@ -24,6 +24,7 @@ ADMIN_EMAIL_ADDRESS=kyber.vision.info@gmail.com
 ADMIN_EMAIL_PASSWORD="app pass word from google app password"
 PATH_DB_BACKUPS=/home/shared/project_resources/KyberVisionAPI10/db_backups
 PATH_PROJECT_RESOURCES=/home/shared/project_resources/KyberVisionAPI10
+ADMIN_EMAIL_KV_MANAGER_WEBSITE=["nrodrig1@gmail.com"]
 ```
 
 ## nodemailer emails
