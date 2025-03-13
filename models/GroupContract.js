@@ -1,3 +1,4 @@
+//NR: refactored 2025-03-13
 const { DataTypes } = require("sequelize");
 const sequelize = require("./_connection");
 
@@ -12,22 +13,19 @@ const GroupContract = sequelize.define(
     userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: "user_id",
     },
     teamId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: "team_id",
     },
-    // rightsFlags: {
-    //   type: DataTypes.TINYINT,
-    //   allowNull: false,
-    //   defaultValue: 0,
-    //   field: "rights_flags",
-    // },
+    rightsFlags: {
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 0,
+    },
   },
   {
-    tableName: "group_contracts",
+    tableName: "groupContracts",
     timestamps: false,
   }
 );

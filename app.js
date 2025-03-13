@@ -39,7 +39,7 @@ app.use("/groups", groupsRouter);
 app.use("/matches", matchesRouter);
 app.use("/players", playersRouter);
 app.use("/scripts", scriptsRouter);
-app.use("/syncContracts", syncContractsRouter);
+app.use("/sync-contracts", syncContractsRouter);
 app.use("/teams", teamsRouter);
 app.use("/leagues", leaguesRouter);
 app.use("/admin-db", adminDbRouter);

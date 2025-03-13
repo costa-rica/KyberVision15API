@@ -1,3 +1,4 @@
+// NR: refactored 2025-03-13
 const { DataTypes } = require("sequelize");
 const sequelize = require("./_connection");
 
@@ -12,32 +13,26 @@ const Match = sequelize.define(
     leagueId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: "league_id",
     },
     teamIdAnalyzed: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: "team_id_analyzed",
     },
     teamIdOpponent: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      field: "team_id_opponent",
     },
     teamIdWinner: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      field: "team_id_winner",
     },
     groupContractId: {
       type: DataTypes.INTEGER,
-      // allowNull: false,
-      field: "group_contract_id",
+      allowNull: true,
     },
     matchDate: {
       type: DataTypes.DATEONLY,
       allowNull: false,
-      field: "match_date",
     },
     city: {
       type: DataTypes.STRING,

@@ -1,4 +1,4 @@
-// NR: refactored 2025-02-08
+// NR: refactored 2025-03-13
 const { DataTypes } = require("sequelize");
 const sequelize = require("./_connection");
 
@@ -13,17 +13,10 @@ const Script = sequelize.define(
     matchId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: "match_id",
-    },
-    date: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
     },
   },
   {
     tableName: "scripts",
-    timestamps: false,
   }
 );
 

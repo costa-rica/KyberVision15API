@@ -1,3 +1,4 @@
+// NR: refactored 2025-03-13
 const { DataTypes } = require("sequelize");
 const sequelize = require("./_connection");
 const Match = require("./Match");
@@ -17,7 +18,6 @@ const Video = sequelize.define(
         model: Match,
         key: "id",
       },
-      field: "match_id",
     },
     filename: {
       type: DataTypes.STRING,
@@ -28,11 +28,9 @@ const Video = sequelize.define(
     },
     videoFileCreatedDateTimeEstimate: {
       type: DataTypes.DATE,
-      field: "video_file_created_date_time_estimate",
     },
     videoFileSizeInMb: {
       type: DataTypes.FLOAT,
-      field: "video_file_size_in_mb",
     },
   },
   {

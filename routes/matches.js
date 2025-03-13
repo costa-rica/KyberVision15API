@@ -1,10 +1,17 @@
 const express = require("express");
 const Script = require("../models/Script");
 const Match = require("../models/Match");
+const SyncContract = require("../models/SyncContract");
+const Action = require("../models/Action");
 const { authenticateToken } = require("../middleware/auth");
 const router = express.Router();
 const { createMatch, deleteMatch } = require("../modules/match");
 const { checkBodyReturnMissing } = require("../modules/common");
+const { createEstimatedTimestampStartOfVideo } = require("../modules/scripts");
+const {
+  createUniquePlayerNamesArray,
+  createUniquePlayerObjArray,
+} = require("../modules/players");
 
 //GET / - Retrieve all matches
 
@@ -19,7 +26,6 @@ router.get("/", authenticateToken, async (req, res) => {
 });
 
 // POST /create - Create a new match
-
 router.post("/create", authenticateToken, async (req, res) => {
   try {
     const {
@@ -74,9 +80,7 @@ router.post("/create", authenticateToken, async (req, res) => {
   }
 });
 
-/**
- * DELETE /:matchId - Delete a match by ID
- */
+//DELETE /:matchId - Delete a match by ID
 router.delete("/:matchId", authenticateToken, async (req, res) => {
   try {
     const { matchId } = req.params;
@@ -232,6 +236,98 @@ router.post("/update-or-create", authenticateToken, async (req, res) => {
   } catch (error) {
     console.error("Error in /update-or-create route:", error);
     return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// 🔹 Get all actions for a match (GET /matches/:matchId/actions)
+router.get("/:matchId/actions", authenticateToken, async (req, res) => {
+  console.log(`- in GET /matches/${req.params.matchId}/actions`);
+
+  try {
+    const { matchId } = req.params;
+
+    // 🔹 Find all Scripts linked to this matchId
+    const scripts = await Script.findAll({
+      where: { matchId },
+      attributes: ["id"], // Only need script IDs
+    });
+
+    if (scripts.length === 0) {
+      return res
+        .status(404)
+        .json({ result: false, message: "No actions found for this match." });
+    }
+
+    // Extract script IDs
+    const scriptIds = scripts.map((script) => script.id);
+
+    // 🔹 Find all SyncContracts associated with these Scripts
+    const syncContracts = await SyncContract.findAll({
+      where: { scriptId: scriptIds },
+      attributes: ["id", "deltaTime"], // Need deltaTime now
+    });
+
+    if (syncContracts.length === 0) {
+      return res.status(404).json({
+        result: false,
+        message: "No sync contracts found for this match.",
+      });
+    }
+
+    // Extract syncContract IDs
+    const syncContractIds = syncContracts.map((sc) => sc.id);
+
+    // 🔹 Find all Actions linked to these SyncContracts
+    const actions = await Action.findAll({
+      where: { syncContractId: syncContractIds },
+      order: [["timestamp", "ASC"]],
+    });
+
+    if (actions.length === 0) {
+      return res.json({ result: true, actions: [] });
+    }
+
+    // Determine the syncContract deltaTime (assuming all contracts have the same deltaTime)
+    const deltaTime = syncContracts[0].deltaTime || 0.0;
+
+    // Compute estimated start of video timestamp
+    const estimatedStartOfVideo = createEstimatedTimestampStartOfVideo(
+      actions,
+      deltaTime
+    );
+
+    // Attach timestampFromStartOfVideo to each action
+    const updatedActions = actions.map((action) => {
+      const actionTimestamp = new Date(action.timestamp); // Convert action timestamp to Date object
+      const timeDifference =
+        (actionTimestamp.getTime() - estimatedStartOfVideo.getTime()) / 1000; // Convert milliseconds to seconds
+
+      return {
+        ...action.toJSON(),
+        timestampFromStartOfVideo: timeDifference, // Float value in seconds
+      };
+    });
+
+    const uniqueListOfPlayerNamesArray = await createUniquePlayerNamesArray(
+      updatedActions
+    );
+    const uniqueListOfPlayerObjArray = await createUniquePlayerObjArray(
+      updatedActions
+    );
+    // console.log(uniqueListOfPlayerObjArray);
+    res.json({
+      result: true,
+      actionsArray: updatedActions,
+      playerNamesArray: uniqueListOfPlayerNamesArray,
+      playerDbObjectsArray: uniqueListOfPlayerObjArray,
+    });
+  } catch (error) {
+    console.error("Error fetching actions for match:", error);
+    res.status(500).json({
+      result: false,
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 });
 

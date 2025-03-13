@@ -1,7 +1,6 @@
-// Modified 2025-03-04
+// NR: refactored 2025-03-13
 const { DataTypes } = require("sequelize");
 const sequelize = require("./_connection");
-const PlayerContract = require("./PlayerContract");
 
 const Team = sequelize.define(
   "Team",
@@ -14,7 +13,6 @@ const Team = sequelize.define(
     teamName: {
       type: DataTypes.STRING,
       allowNull: false,
-      field: "team_name",
     },
     city: {
       type: DataTypes.STRING,
@@ -23,12 +21,10 @@ const Team = sequelize.define(
     coachName: {
       type: DataTypes.STRING,
       allowNull: false,
-      field: "coach_name",
     },
   },
   {
     tableName: "teams",
-    timestamps: false,
   }
 );
 

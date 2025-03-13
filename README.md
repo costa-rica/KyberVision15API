@@ -1,46 +1,59 @@
 ![Logo](./docs/images/kyberVisionLogo01.png)
 
-# API v0.10.0
+# API v0.11.0
 
 ## Description
 
-- Email confirmation of registration
-  - nodemailer and external directory (env var PATH_NODEMAILER_HTML_TEMPLATES) used for HTML email templates
-- Currently the Development API
-- Database connection and other logic for the Kyber Vision web and mobile apps. This version based on the git@github.com:Priax/KyberVision.git.
-- database reconstructed to resemble the database schema from KV2-BDD-2025-01-22 - BDD.drawio.png
+The API for Kyber Vision. This applicaiton allows users to:
+
+- register, login
+- upload videos
+- create matches
+- submit actions
+- all connected to sqlite database (using sequelize)
+- register confirmation emails using nodemailer
+- database backups in AdminDb.js files
+
+### Developer Notes
+
+- This version merged the changes from KV API10 (through the db_backup_01 branch which is ahead of main as of 2025-03-13)
+- As of 2025-03-13, the servers kv10 and kv11 are running the db_backup_01 branch
+  - We intend that these will be merged to main after some testing and no errors
+  - If errors exist, we can compare this repo KV API11 with the KV API10 main branch
 
 ## .env
 
 ```
-APP_NAME=KyberVisionAPI10
+APP_NAME=KyberVisionAPI11
 JWT_SECRET=<your_code_here>
 PORT=<your_port_here>
-PATH_DATABASE=/home/dashanddata_user/databases/KyberVisionAPI10/
-PATH_VIDEOS=/home/dashanddata_user/project_resources/KyberVisionAPI09/match_videos
-NAME_DB=kv10.db
-PATH_NODEMAILER_HTML_TEMPLATES=/home/dashanddata_user/project_resources/KyberVisionAPI09/nodemailer_html_templates
+PATH_DATABASE=/home/dashanddata_user/databases/KyberVisionAPI11/
+PATH_VIDEOS=/home/dashanddata_user/project_resources/KyberVisionAPI11/match_videos
+NAME_DB=kv11.db
+PATH_NODEMAILER_HTML_TEMPLATES=/home/dashanddata_user/project_resources/KyberVisionAPI11/nodemailer_html_templates
 ADMIN_EMAIL_ADDRESS=kyber.vision.info@gmail.com
 ADMIN_EMAIL_PASSWORD="app pass word from google app password"
-PATH_DB_BACKUPS=/home/shared/project_resources/KyberVisionAPI10/db_backups
-PATH_PROJECT_RESOURCES=/home/shared/project_resources/KyberVisionAPI10
+PATH_DB_BACKUPS=/home/shared/project_resources/KyberVisionAPI11/db_backups
+PATH_PROJECT_RESOURCES=/home/shared/project_resources/KyberVisionAPI11
 ADMIN_EMAIL_KV_MANAGER_WEBSITE=["nrodrig1@gmail.com"]
 ```
 
 ## nodemailer emails
 
-- create folder in project_resources/KyberVisionAPI09
-  - "project_resources/KyberVisionAPI09/nodemailer_html_templates"
+- create folder in project_resources/KyberVisionAPI11
+  - "project_resources/KyberVisionAPI11/nodemailer_html_templates"
 
-## Route name changes
+## Sync Video Process details found here (as of 2025-03-13):
 
-- `/matchs` is `/matches`
+- [Sync Video Process](./docs/SyncVideoProcess.md)
 
-### test
+## Routes details found here:
 
-- /users
-- /videos
-- /scripts
+- [Routes](./docs/Routes.md)
+
+## Modules details found here:
+
+- [Modules](./docs/Modules.md)
 
 ## Test request to upload video
 
@@ -131,8 +144,6 @@ sudo apt install ffmpeg
 ├── server.js
 └── yarn.lock
 ```
-
-## [Routes](./docs/Routes.md)
 
 ## Troubleshooting
 

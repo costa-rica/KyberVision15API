@@ -1,4 +1,4 @@
-// NR: refactored 2025-03-04
+// NR: refactored 2025-03-13
 const { DataTypes } = require("sequelize");
 const sequelize = require("./_connection");
 
@@ -17,17 +17,14 @@ const Point = sequelize.define(
         min: 1,
         max: 5,
       },
-      field: "set_number",
     },
     scoreTeamAnalyzed: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: "score_team_analyzed",
     },
     scoreTeamOther: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: "score_team_other",
     },
     rotation: {
       type: DataTypes.STRING,
@@ -35,7 +32,6 @@ const Point = sequelize.define(
       validate: {
         isIn: [["P1", "P2", "P3", "P4", "P5", "P6"]],
       },
-      field: "rotation",
     },
   },
   {

@@ -199,6 +199,7 @@ router.delete("/:videoId", authenticateToken, async (req, res) => {
   }
 });
 
+// 🔹 Update Video by ID (POST /videos/update/:videoId) intended to update the videoFileCreatedDateTimeEstimate
 router.post("/update/:videoId", authenticateToken, async (req, res) => {
   console.log("- in POST /update/:videoId");
   const { videoId } = req.params;
@@ -216,6 +217,7 @@ router.post("/update/:videoId", authenticateToken, async (req, res) => {
   res.json({ result: true, message: "Video updated successfully" });
 });
 
+// 🔹 (from 2025-03-10 effort) Stream Video by ID (GET /videos/stream/:videoId)
 router.get("/stream/:videoId", async (req, res) => {
   const videoId = req.params.videoId;
   const videoObj = await Video.findByPk(videoId);
@@ -281,7 +283,7 @@ router.get("/stream/:videoId", async (req, res) => {
     file.on("end", () => console.log("🚀 Full video sent!"));
   }
 });
-
+// 🔹 (from 2025-03-10 effort) Stream Video by ID (GET /videos/stream-only/:videoId)
 router.get("/stream-only/:videoId", async (req, res) => {
   console.log(`- in GET /stream-only/${req.params.videoId}`);
   const videoId = req.params.videoId;

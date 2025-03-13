@@ -1,4 +1,4 @@
-// NR: refactored 2025-02-08
+// NR: refactored 2025-03-13
 const { DataTypes } = require("sequelize");
 const sequelize = require("./_connection");
 
@@ -13,21 +13,19 @@ const SyncContract = sequelize.define(
     scriptId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: "script_id",
     },
     videoId: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      field: "video_id",
     },
     deltaTime: {
       type: DataTypes.FLOAT,
       allowNull: true,
-      field: "delta_time",
+      defaultValue: 0.0,
     },
   },
   {
-    tableName: "sync_contracts",
+    tableName: "syncContracts",
     timestamps: false,
   }
 );

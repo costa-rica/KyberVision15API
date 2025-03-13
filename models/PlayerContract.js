@@ -1,4 +1,4 @@
-// NR: refactored 2025-03-05
+// NR: refactored 2025-03-13
 const { DataTypes } = require("sequelize");
 const sequelize = require("./_connection");
 
@@ -13,21 +13,18 @@ const PlayerContract = sequelize.define(
     playerId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: "player_id",
     },
     teamId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: "team_id",
     },
     shirtNumber: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: "shirt_number",
     },
   },
   {
-    tableName: "player_contracts",
+    tableName: "playerContracts",
     timestamps: false,
   }
 );
