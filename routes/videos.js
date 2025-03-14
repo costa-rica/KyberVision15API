@@ -11,17 +11,14 @@ const fs = require("fs");
 const { getMatchWithTeams } = require("../modules/match");
 const ffmpeg = require("fluent-ffmpeg");
 
-// 🔹 Upload Video (POST /upload)
+// 🔹 Upload Video (POST /videos/upload)
 router.post(
   "/upload",
   authenticateToken,
   upload.single("video"), // Expecting a file with field name "video"
   async (req, res) => {
     try {
-      console.log("- in POST /upload");
-
-      const user = req.user;
-      console.log(`User ID: ${user.id}`);
+      console.log("📌 - in POST /videos/upload");
 
       const { matchId } = req.body;
 
@@ -38,63 +35,67 @@ router.post(
           .json({ result: false, message: "No video file uploaded" });
       }
 
-      // --- start Update for Megabyes capureing
       // Step 1: Get video file size in MB
-      const fileSizeBytes = req.file.size; // Get size in bytes
-      const fileSizeMb = (fileSizeBytes / (1024 * 1024)).toFixed(2); // Convert to MB (rounded)
+      const fileSizeBytes = req.file.size;
+      const fileSizeMb = (fileSizeBytes / (1024 * 1024)).toFixed(2);
 
-      console.log(`Video File Size: ${fileSizeMb} MB`);
+      console.log(`📁 Video File Size: ${fileSizeMb} MB`);
 
       // Step 2: Create video entry with placeholder URL & file size
       const newVideo = await Video.create({
         matchId: parseInt(matchId, 10),
         filename: req.file.filename,
-        url: "placeholder", // Temporary placeholder
-        videoFileSizeInMb: fileSizeMb, // Store file size
+        url: "placeholder",
+        videoFileSizeInMb: fileSizeMb,
       });
 
-      // Step 3: Generate the correct URL
+      // Step 3: Generate and update video URL
       const videoURL = `https://${req.get("host")}/videos/${newVideo.id}`;
-
-      // Step 4: Update video entry with the correct URL
       await newVideo.update({ url: videoURL });
 
-      //------ end update
-
-      // // Step 1: Create video entry with placeholder URL
-      // const newVideo = await Video.create({
-      //   matchId: parseInt(matchId, 10),
-      //   filename: req.file.filename,
-      //   url: "placeholder", // Temporary placeholder
-      // });
-
-      // // Step 2: Generate the correct URL
-      // const videoURL = `https://${req.get("host")}/videos/${newVideo.id}`;
-
-      // // Step 3: Update video entry with the correct URL
-      // await newVideo.update({ url: videoURL });
-
-      const script = await Script.findOne({
+      // Step 4: Find all scripts with the matching matchId
+      const scripts = await Script.findAll({
         where: { matchId },
       });
 
-      if (script) {
+      if (scripts.length === 0) {
+        console.log(`⚠️ No scripts found for matchId: ${matchId}`);
+      } else {
+        console.log(
+          `📜 Found ${scripts.length} script(s) for matchId: ${matchId}`
+        );
+      }
+
+      let syncContractUpdates = 0;
+
+      // Step 5: Loop through all scripts and update SyncContracts
+      for (const script of scripts) {
         const syncContracts = await SyncContract.findAll({
           where: { scriptId: script.id },
         });
 
-        syncContracts.forEach(async (syncContract) => {
-          await syncContract.update({ videoId: newVideo.id });
-        });
+        if (syncContracts.length > 0) {
+          console.log(
+            `🔄 Updating ${syncContracts.length} SyncContract(s) for scriptId: ${script.id}`
+          );
+
+          for (const syncContract of syncContracts) {
+            await syncContract.update({ videoId: newVideo.id });
+            syncContractUpdates++;
+          }
+        } else {
+          console.log(`⚠️ No SyncContracts found for scriptId: ${script.id}`);
+        }
       }
 
+      // Step 6: Send success response
       res.status(201).json({
         result: true,
         message: "Video uploaded successfully",
         video: newVideo,
       });
     } catch (error) {
-      console.error("Error uploading video:", error);
+      console.error("❌ Error uploading video:", error);
       res.status(500).json({
         result: false,
         message: "Internal Server Error",

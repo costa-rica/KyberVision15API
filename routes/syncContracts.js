@@ -97,4 +97,58 @@ router.post(
   }
 );
 
+// 🔹 Update or create a SyncContract (POST /sync-contracts/update-or-create)
+router.post("/update-or-create", authenticateToken, async (req, res) => {
+  try {
+    const { id, scriptId, videoId, deltaTime } = req.body;
+
+    // If `id` is provided, attempt to update an existing SyncContract
+    if (id) {
+      const syncContractToUpdate = await SyncContract.findByPk(id);
+
+      if (!syncContractToUpdate) {
+        return res.status(404).json({ error: "SyncContract not found" });
+      }
+
+      // Update only the fields that are provided
+      const updatedFields = {};
+      Object.keys(req.body).forEach((key) => {
+        if (req.body[key] !== null && req.body[key] !== undefined) {
+          updatedFields[key] = req.body[key];
+        }
+      });
+
+      await syncContractToUpdate.update(updatedFields);
+      return res
+        .status(200)
+        .json({ result: true, syncContract: syncContractToUpdate });
+    }
+
+    // If no `id` is provided, check for duplicate SyncContract before creating a new one
+    const existingSyncContract = await SyncContract.findOne({
+      where: { scriptId, videoId, deltaTime },
+    });
+
+    if (existingSyncContract) {
+      return res
+        .status(400)
+        .json({ error: "This SyncContract already exists" });
+    }
+
+    // Create new SyncContract if no duplicate exists
+    const newSyncContract = await SyncContract.create({
+      scriptId,
+      videoId,
+      deltaTime,
+    });
+
+    return res
+      .status(201)
+      .json({ result: true, syncContract: newSyncContract });
+  } catch (error) {
+    console.error("Error in /sync-contracts/update-or-create route:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 module.exports = router;
