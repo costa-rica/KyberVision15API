@@ -41,6 +41,12 @@ const deleteVideo = async (videoId) => {
     if (!video) {
       return { success: false, error: "Video not found" };
     }
+    const filePath = path.join(process.env.PATH_VIDEOS, video.filename);
+    fs.unlink(filePath, (err) => {
+      if (err) {
+        console.error(`❌ Error deleting file ${filePath}:`, err);
+      }
+    });
 
     await video.destroy();
     return { success: true, message: "Video deleted successfully" };
