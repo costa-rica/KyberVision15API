@@ -5,7 +5,13 @@ const Video = require("../models/Video");
 const Match = require("../models/Match");
 const Script = require("../models/Script");
 const SyncContract = require("../models/SyncContract");
-const { upload, deleteVideo } = require("../modules/videoProcessing");
+const {
+  upload,
+  deleteVideo,
+  createVideoMontageSingleClip,
+  createVideoMontageClipFromTwoTimestamps,
+  createVideoMontage04,
+} = require("../modules/videoProcessing");
 const path = require("path");
 const fs = require("fs");
 const { getMatchWithTeams } = require("../modules/match");
@@ -338,6 +344,94 @@ router.get("/stream-only/:videoId", async (req, res) => {
   });
 
   file.on("end", () => console.log("🚀 Streaming finished!"));
+});
+
+// // 🔹 recieve video actions for video montage POST /videos/montage/:videoId
+// router.post("/montage/:videoId", authenticateToken, async (req, res) => {
+//   console.log("- in POST /videos/montage/:videoId");
+//   const { videoId } = req.params;
+//   const { actionsArray } = req.body;
+//   console.log(actionsArray);
+
+//   const videoObj = await Video.findByPk(videoId);
+//   if (!videoObj) {
+//     return res.status(404).json({ result: false, message: "Video not found" });
+//   }
+
+//   res.json({
+//     result: true,
+//     message: `Video montage ${actionsArray.length} actions received`,
+//   });
+// });
+
+// 🔹 Create a video montage from selected actions (POST /videos/montage/:videoId)
+router.post("/montage/:videoId", authenticateToken, async (req, res) => {
+  console.log("- in POST /videos/montage/:videoId");
+
+  try {
+    const { videoId } = req.params;
+    const { actionsArray } = req.body;
+
+    if (
+      !actionsArray ||
+      !Array.isArray(actionsArray) ||
+      actionsArray.length === 0
+    ) {
+      return res
+        .status(400)
+        .json({ result: false, message: "Invalid actionsArray" });
+    }
+
+    // 🔹 Retrieve video file information
+    const videoObj = await Video.findByPk(videoId);
+    if (!videoObj) {
+      return res
+        .status(404)
+        .json({ result: false, message: "Video not found" });
+    }
+
+    const videoFilePathAndName = path.join(
+      process.env.PATH_VIDEOS,
+      videoObj.filename
+    );
+
+    // 🔹 Extract timestamps from actionsArray
+    const timestampArray = actionsArray.map((action) => action.timestamp);
+
+    // // 🔹 Generate video montage V1
+    // const outputFilePath = await createVideoMontage(
+    //   videoFilePathAndName,
+    //   timestampArray[0]
+    // );
+    // // 🔹 Generate video montage Single V2
+    // const outputFilePath = await createVideoMontageSingleClip(
+    //   videoFilePathAndName,
+    //   timestampArray[0]
+    // );
+    // // 🔹 Generate video montage Two timestamps V3
+    // const outputFilePath = await createVideoMontageClipFromTwoTimestamps(
+    //   videoFilePathAndName,
+    //   timestampArray
+    // );
+    // 🔹 Generate video montage Two timestamps V4
+    const outputFilePath = await createVideoMontage04(
+      videoFilePathAndName,
+      timestampArray
+    );
+
+    res.json({
+      result: true,
+      message: "Video montage created successfully",
+      montagePath: outputFilePath,
+    });
+  } catch (error) {
+    console.error("Error creating video montage:", error);
+    res.status(500).json({
+      result: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
 });
 
 module.exports = router;
