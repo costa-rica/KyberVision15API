@@ -314,6 +314,25 @@ async function createVideoMontage04(videoFilePathAndName, timestampArray) {
       .run();
   });
 
+  // Clean up the clips folder after creating the final montage
+  fs.readdir(clipsPath, (err, files) => {
+    if (err) {
+      console.error("❌ Error reading clips folder:", err);
+      return;
+    }
+
+    files.forEach((file) => {
+      const filePath = path.join(clipsPath, file);
+      fs.unlink(filePath, (err) => {
+        if (err) {
+          console.error(`❌ Error deleting file ${filePath}:`, err);
+        } else {
+          console.log(`🗑️ Deleted temporary clip: ${filePath}`);
+        }
+      });
+    });
+  });
+
   return finalOutputPath;
 }
 
