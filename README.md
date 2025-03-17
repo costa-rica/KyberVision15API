@@ -32,12 +32,12 @@ PATH_VIDEOS=/home/dashanddata_user/project_resources/KyberVisionAPI11/match_vide
 PATH_VIDEOS_MONTAGE_CLIPS=/home/dashanddata_user/project_resources/KyberVisionAPI11/match_videos/montage_clips
 PATH_VIDEOS_MONTAGE_COMPLETE=/home/dashanddata_user/project_resources/KyberVisionAPI11/match_videos/montage_complete
 NAME_DB=kv11.db
-PATH_NODEMAILER_HTML_TEMPLATES=/home/dashanddata_user/project_resources/KyberVisionAPI11/nodemailer_html_templates
 ADMIN_EMAIL_ADDRESS=kyber.vision.info@gmail.com
 ADMIN_EMAIL_PASSWORD="app pass word from google app password"
 PATH_DB_BACKUPS=/home/shared/project_resources/KyberVisionAPI11/db_backups
 PATH_PROJECT_RESOURCES=/home/shared/project_resources/KyberVisionAPI11
 ADMIN_EMAIL_KV_MANAGER_WEBSITE=["nrodrig1@gmail.com"]
+URL_KV_MANAGER_WEBSITE=https://kv11-manager.dashanddata.com
 ```
 
 ## nodemailer emails
