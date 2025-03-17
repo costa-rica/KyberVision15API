@@ -1,6 +1,5 @@
 require("dotenv").config();
 const sequelize = require("./models/_connection");
-// const associations = require("./models/_associations");
 require("./models/_associations");
 var express = require("express");
 var path = require("path");
@@ -59,14 +58,5 @@ sequelize
     await onStartUpCreateEnvUsers(); // <-- Call function here
   })
   .catch((error) => console.error("❌ Error syncing database:", error));
-
-// // Sync database and start server
-// sequelize
-//   .sync()
-//   .then(() => {
-//     console.log("✅ Database connected & synced");
-//     await onAppLaunchCreateEnvUsers(); // <-- Call function here
-//   })
-//   .catch((error) => console.error("Error syncing database:", error));
 
 module.exports = app;

@@ -5,7 +5,10 @@ const User = require("../models/User");
 const GroupContract = require("../models/GroupContract");
 const { authenticateToken } = require("../middleware/auth");
 const jwt = require("jsonwebtoken");
-const { sendRegistrationEmail } = require("../modules/mailer");
+const {
+  sendRegistrationEmail,
+  sendResetPasswordEmail,
+} = require("../modules/mailer");
 
 const asyncHandler = (fn) => (req, res, next) =>
   Promise.resolve(fn(req, res, next)).catch(next);
@@ -49,12 +52,6 @@ router.post(
       .then(() => console.log("Email sent successfully"))
       .catch((error) => console.error("Email failed:", error));
 
-    //   res.status(201).json({
-    //     message: "Utilisateur créé avec succès.",
-    //     user: { email: "email", username: "username" },
-    //     token: "token_code",
-    //   });
-    // })
     res
       .status(201)
       .json({ message: "Utilisateur créé avec succès.", user, token });
@@ -210,5 +207,64 @@ router.post(
     res.status(200).json({ message: "Mise à jour réussie.", user });
   })
 );
+
+router.post(
+  "/test-email",
+  asyncHandler(async (req, res) => {
+    const { email, username } = req.body;
+    await sendRegistrationEmail(email, username);
+    res.status(200).json({ message: "Email sent successfully" });
+  })
+);
+
+// 🔹 Send reset token
+// Request password reset
+router.post("/request-password-reset", async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "5h",
+    });
+    // Reset link
+    const resetLink = `${process.env.URL_KV_MANAGER_WEBSITE}/forgot-password/reset/${token}`;
+
+    // Send email
+    await sendResetPasswordEmail(email, resetLink)
+      .then(() => console.log("Email sent successfully"))
+      .catch((error) => console.error("Email failed:", error));
+
+    res.json({ message: "Password reset email sent" });
+  } catch (error) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.post("/reset-password/:token", async (req, res) => {
+  const token = req.params.token;
+  const { password } = req.body;
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findByPk(decoded.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await user.update({ password: hashedPassword });
+
+    res.json({ message: "Password reset successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 module.exports = router;

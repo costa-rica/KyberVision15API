@@ -312,7 +312,7 @@ router.get("/:matchId/actions", authenticateToken, async (req, res) => {
         ...action.toJSON(),
         timestampFromStartOfVideo:
           (new Date(action.timestamp) - estimatedStartOfVideo) / 1000, // Convert ms to seconds
-        actionsArrayId: index + 1, // Start indexing at 1
+        reviewVideoActionsArrayIndex: index + 1, // Start indexing at 1
       };
     });
 
@@ -406,7 +406,7 @@ router.get("/:matchId/actions", authenticateToken, async (req, res) => {
 //       ...action.toJSON(),
 //       timestampFromStartOfVideo:
 //         (new Date(action.timestamp) - estimatedStartOfVideo) / 1000, // Convert ms to seconds
-//       actionsArrayId: index + 1, // Start indexing at 1
+//       reviewVideoActionsArrayIndex: index + 1, // Start indexing at 1
 //     }));
 
 //     const uniqueListOfPlayerNamesArray = await createUniquePlayerNamesArray(

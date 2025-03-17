@@ -1,10 +1,10 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/user");
+const User = require("../models/User");
 
-function createToken(user) {
-  const secretKey = process.env.SECRET_KEY;
-  return jwt.sign({ user }, secretKey, { expiresIn: "7d" });
-}
+// function createToken(user) {
+//   const secretKey = process.env.SECRET_KEY;
+//   return jwt.sign({ user }, secretKey, { expiresIn: "7d" });
+// }
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
@@ -55,7 +55,7 @@ const restrictEmails = (email) => {
 };
 
 module.exports = {
-  createToken,
+  // createToken,
   authenticateToken,
   findUserByEmail,
   restrictEmails,
