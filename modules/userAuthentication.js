@@ -13,7 +13,7 @@ function authenticateToken(req, res, next) {
     return res.status(401).json({ message: "Token is required" });
   }
 
-  jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) return res.status(403).json({ message: "Invalid token" });
     const { user } = decoded;
     console.log("in authThoken func()");

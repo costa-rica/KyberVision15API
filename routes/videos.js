@@ -1,10 +1,12 @@
 const express = require("express");
 const { authenticateToken } = require("../middleware/auth");
+// const { authenticateToken } = require("../modules/userAuthentication");
 const router = express.Router();
 const Video = require("../models/Video");
-const Match = require("../models/Match");
+// const Match = require("../models/Match");
 const Script = require("../models/Script");
 const SyncContract = require("../models/SyncContract");
+const User = require("../models/User");
 const {
   upload,
   deleteVideo,
@@ -18,6 +20,10 @@ const { getMatchWithTeams } = require("../modules/match");
 const ffmpeg = require("fluent-ffmpeg");
 // const { spawn } = require("child_process");
 const jobQueue = require("../modules/queueService");
+const {
+  sendVideoMontageCompleteNotificationEmail,
+} = require("../modules/mailer");
+const jwt = require("jsonwebtoken");
 
 // 🔹 Upload Video (POST /videos/upload)
 router.post(
@@ -436,47 +442,156 @@ router.post("/montage/:videoId", authenticateToken, async (req, res) => {
   }
 });
 
-// router.get("/video-done/video", authenticateToken, async (req, res) => {
-router.get(
-  "/montage-service/video-completed",
+// 🔹 POST /videos/montage-service/queue-a-job: Queue a job to process a video montage
+router.post(
+  "/montage-service/queue-a-job",
   authenticateToken,
   async (req, res) => {
-    console.log("- in GET /montage-service/video-completed 🔔");
+    console.log("Received request to queue a job...");
+    // const { videoId, timestampArray } = req.body;
+    const { videoId, actionsArray, token } = req.body;
+    const user = req.user;
+    // const timestampArray = [13, 19];
+    const videoObj = await Video.findByPk(videoId);
 
-    res.json({ result: true, message: "Got it :)" });
+    if (!videoObj) {
+      return res
+        .status(404)
+        .json({ result: false, message: "Video not found" });
+    }
+    const videoFilePathAndName = path.join(
+      process.env.PATH_VIDEOS,
+      videoObj.filename
+    );
+
+    const KV_VIDEO_PROCESSOR_PATH = path.join(
+      process.env.PATH_KV_VIDEO_PROCESSOR, // e.g., "/Users/nick/Documents/KyberVisionVideoProcessor"
+      process.env.NAME_KV_VIDEO_PROCESSOR // e.g., "videoProcessor.js"
+    );
+    console.log(`-----> [1] token: ${token}`);
+    try {
+      // jobQueue.addJob(); // Add job to the queue
+      jobQueue.addJob(
+        KV_VIDEO_PROCESSOR_PATH,
+        videoFilePathAndName,
+        // timestampArray,
+        actionsArray,
+        user,
+        token
+      ); // Pass arguments to queue
+      res.json({ message: "Job successfully queued and processed" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to process job" });
+    }
   }
 );
 
-router.post("/montage-service/call", async (req, res) => {
-  console.log("Received request to queue a job...");
-  const { videoId, timestampArray } = req.body;
+// 🔹 POST /videos/montage-service/video-completed-notify-user: Video montage completed
+router.post(
+  "/montage-service/video-completed-notify-user",
+  authenticateToken,
+  async (req, res) => {
+    console.log("- in POST /montage-service/video-completed-notify-user");
+    const { filename } = req.body;
+    const userId = req.user.id;
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ result: false, message: "User not found" });
+    }
+    console.log(`filename: ${filename}`);
+    console.log(`userId: ${userId}`);
 
-  // const timestampArray = [13, 19];
-  const videoObj = await Video.findByPk(videoId);
-
-  if (!videoObj) {
-    return res.status(404).json({ result: false, message: "Video not found" });
+    // 🔹 Send email notification
+    const tokenizedFilename = jwt.sign({ filename }, process.env.JWT_SECRET);
+    let montageUrl;
+    if (req.get("host").includes("localhost")) {
+      montageUrl = `http://${req.get(
+        "host"
+      )}/videos/montage-service/finished-video/${tokenizedFilename}`;
+    } else {
+      montageUrl = `https://${req.get(
+        "host"
+      )}/videos/montage-service/finished-video/${tokenizedFilename}`;
+    }
+    await sendVideoMontageCompleteNotificationEmail(user.email, montageUrl);
+    res.json({ result: true, message: "Email sent successfully" });
   }
-  const videoFilePathAndName = path.join(
-    process.env.PATH_VIDEOS,
-    videoObj.filename
-  );
+);
 
-  const KV_VIDEO_PROCESSOR_PATH = path.join(
-    process.env.PATH_KV_VIDEO_PROCESSOR, // e.g., "/Users/nick/Documents/KyberVisionVideoProcessor"
-    process.env.NAME_KV_VIDEO_PROCESSOR // e.g., "videoProcessor.js"
-  );
-  try {
-    // jobQueue.addJob(); // Add job to the queue
-    jobQueue.addJob(
-      videoFilePathAndName,
-      timestampArray,
-      KV_VIDEO_PROCESSOR_PATH
-    ); // Pass arguments to queue
-    res.json({ message: "Job successfully queued and processed" });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to process job" });
+// 🔹 GET /videos/montage-service/finished-video/:tokenizedMontageFilename: Video montage completed
+router.get(
+  "/montage-service/finished-video/:tokenizedMontageFilename",
+  (req, res) => {
+    console.log(
+      "- in GET /montage-service/finished-video/:tokenizedMontageFilename"
+    );
+
+    const { tokenizedMontageFilename } = req.params;
+
+    // 🔹 Verify token
+    jwt.verify(
+      tokenizedMontageFilename,
+      process.env.JWT_SECRET,
+      (err, decoded) => {
+        if (err) {
+          return res
+            .status(401)
+            .json({ result: false, message: "Invalid token" });
+        }
+
+        const { filename } = decoded; // Extract full path
+        console.log(`📂 Decoded filename: ${filename}`);
+
+        // 🔹 Check if the file exists
+        if (!fs.existsSync(filename)) {
+          return res
+            .status(404)
+            .json({ result: false, message: "File not found" });
+        }
+
+        // 🔹 Send the file
+        res.sendFile(filename, (err) => {
+          if (err) {
+            console.error("❌ Error sending file:", err);
+            res
+              .status(500)
+              .json({ result: false, message: "Error sending file" });
+          } else {
+            console.log("✅ Video sent successfully");
+          }
+        });
+      }
+    );
   }
-});
+);
+// router.get(
+//   "/montage-service/finished-video/:tokenizedMontageFilename",
+//   (req, res) => {
+//     console.log(
+//       "- in GET /montage-service/finished-video/:tokenizedMontageFilename"
+//     );
+//     const { tokenizedMontageFilename } = req.params;
+
+//     // 🔹 Verify token
+//     jwt.verify(
+//       tokenizedMontageFilename,
+//       process.env.JWT_SECRET,
+//       (err, decoded) => {
+//         if (err) {
+//           return res
+//             .status(401)
+//             .json({ result: false, message: "Invalid token" });
+//         }
+//         const { filename } = decoded;
+//         console.log(`filename: ${filename}`);
+//         res.json({
+//           result: true,
+//           message: "Video montage completed",
+//           filename,
+//         });
+//       }
+//     );
+//   }
+// );
 
 module.exports = router;

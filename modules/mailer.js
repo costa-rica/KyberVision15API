@@ -69,7 +69,41 @@ const sendResetPasswordEmail = async (toEmail, resetLink) => {
   }
 };
 
-module.exports = { sendRegistrationEmail, sendResetPasswordEmail };
+const sendVideoMontageCompleteNotificationEmail = async (toEmail, link) => {
+  try {
+    const templatePath = path.join(
+      __dirname,
+      "../templates/videoMontageCompleteNotificationEmail.html"
+    );
+
+    // Read the external HTML file
+    let emailTemplate = fs.readFileSync(templatePath, "utf8");
+
+    // Replace the placeholder {{montageLink}} with the actual link
+    // emailTemplate = emailTemplate.replace("{{montageLink}}", link);
+    emailTemplate = emailTemplate.replace(/{{montageLink}}/g, link);
+
+    const mailOptions = {
+      from: process.env.ADMIN_EMAIL_ADDRESS,
+      to: toEmail,
+      subject: "Your Video Montage is Ready!",
+      html: emailTemplate,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("✅ Email sent:", info.response);
+    return info;
+  } catch (error) {
+    console.error("❌ Error sending email:", error);
+    throw error;
+  }
+};
+
+module.exports = {
+  sendRegistrationEmail,
+  sendResetPasswordEmail,
+  sendVideoMontageCompleteNotificationEmail,
+};
 
 // // Create a transporter for Microsoft 365 (Office 365) SMTP
 // const transporter = nodemailer.createTransport({

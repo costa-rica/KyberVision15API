@@ -10,11 +10,21 @@ class JobQueue {
   }
 
   // Add a job to the queue
-  addJob(videoFilePathAndName, timestampArray, KV_VIDEO_PROCESSOR_PATH) {
+  // addJob(videoFilePathAndName, timestampArray, KV_VIDEO_PROCESSOR_PATH) {
+  addJob(
+    KV_VIDEO_PROCESSOR_PATH,
+    videoFilePathAndName,
+    actionsArray,
+    user,
+    token
+  ) {
     this.queue.push({
-      videoFilePathAndName,
-      timestampArray,
       KV_VIDEO_PROCESSOR_PATH,
+      videoFilePathAndName,
+      // timestampArray,
+      actionsArray,
+      user,
+      token,
     });
     this.processQueue(); // Process jobs asynchronously
   }
@@ -23,23 +33,24 @@ class JobQueue {
     if (this.isProcessing || this.queue.length === 0) return;
 
     this.isProcessing = true;
-    const { videoFilePathAndName, timestampArray, KV_VIDEO_PROCESSOR_PATH } =
-      this.queue.shift(); // Get next job
+    // const { videoFilePathAndName, timestampArray, KV_VIDEO_PROCESSOR_PATH } =
+    const {
+      KV_VIDEO_PROCESSOR_PATH,
+      videoFilePathAndName,
+      actionsArray,
+      user,
+      token,
+    } = this.queue.shift(); // Get next job
 
     console.log(`🎬 Processing job for: ${videoFilePathAndName}`);
-
-    // const jobScriptPath =
-    //   "/Users/nick/Documents/KyberVisionVideoProcessor/videoProcessor.js";
-    // const jobScriptPath = path.join(
-    //   process.env.PATH_KV_VIDEO_PROCESSOR,
-    //   process.env.NAME_KV_VIDEO_PROCESSOR
-    // );
 
     // Spawn the KyberVisionVideoProcessor with arguments
     const process = spawn("node", [
       KV_VIDEO_PROCESSOR_PATH,
       videoFilePathAndName,
-      JSON.stringify(timestampArray),
+      JSON.stringify(actionsArray),
+      JSON.stringify(user),
+      token,
     ]);
 
     // Log outputs

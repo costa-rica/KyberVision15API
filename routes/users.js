@@ -162,6 +162,9 @@ router.post(
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
       expiresIn: "5h",
     });
+    // const token = jwt.sign({ user }, process.env.JWT_SECRET, {
+    //   expiresIn: "5h",
+    // });
 
     res.status(200).json({ message: "Connexion réussie.", token, user });
   })

@@ -16,4 +16,4 @@ These are some of the modules that might need more explaining
 
 ## queueService.js
 
-- why: called by the POST /videos/montage-service/call to send job to queue and job will call KyberVisionVideoProcessor https://github.com/costa-rica/KyberVisionVideoProcessor01
+- why: called by the POST /videos/montage-service/queue-a-job to send job to queue and job will call KyberVisionVideoProcessor https://github.com/costa-rica/KyberVisionVideoProcessor01
