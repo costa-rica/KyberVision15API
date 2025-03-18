@@ -450,6 +450,7 @@ router.get(
 router.post("/montage-service/call", async (req, res) => {
   console.log("Received request to queue a job...");
   const { videoId, timestampArray } = req.body;
+
   // const timestampArray = [13, 19];
   const videoObj = await Video.findByPk(videoId);
 
@@ -460,9 +461,18 @@ router.post("/montage-service/call", async (req, res) => {
     process.env.PATH_VIDEOS,
     videoObj.filename
   );
+
+  const KV_VIDEO_PROCESSOR_PATH = path.join(
+    process.env.PATH_KV_VIDEO_PROCESSOR, // e.g., "/Users/nick/Documents/KyberVisionVideoProcessor"
+    process.env.NAME_KV_VIDEO_PROCESSOR // e.g., "videoProcessor.js"
+  );
   try {
     // jobQueue.addJob(); // Add job to the queue
-    jobQueue.addJob(videoFilePathAndName, timestampArray); // Pass arguments to queue
+    jobQueue.addJob(
+      videoFilePathAndName,
+      timestampArray,
+      KV_VIDEO_PROCESSOR_PATH
+    ); // Pass arguments to queue
     res.json({ message: "Job successfully queued and processed" });
   } catch (error) {
     res.status(500).json({ error: "Failed to process job" });
