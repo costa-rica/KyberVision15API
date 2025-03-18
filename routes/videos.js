@@ -16,6 +16,8 @@ const path = require("path");
 const fs = require("fs");
 const { getMatchWithTeams } = require("../modules/match");
 const ffmpeg = require("fluent-ffmpeg");
+// const { spawn } = require("child_process");
+const jobQueue = require("../modules/queueService");
 
 // 🔹 Upload Video (POST /videos/upload)
 router.post(
@@ -431,6 +433,39 @@ router.post("/montage/:videoId", authenticateToken, async (req, res) => {
       message: "Internal Server Error",
       error: error.message,
     });
+  }
+});
+
+// router.get("/video-done/video", authenticateToken, async (req, res) => {
+router.get(
+  "/montage-service/video-completed",
+  authenticateToken,
+  async (req, res) => {
+    console.log("- in GET /montage-service/video-completed 🔔");
+
+    res.json({ result: true, message: "Got it :)" });
+  }
+);
+
+router.post("/montage-service/call", async (req, res) => {
+  console.log("Received request to queue a job...");
+  const { videoId, timestampArray } = req.body;
+  // const timestampArray = [13, 19];
+  const videoObj = await Video.findByPk(videoId);
+
+  if (!videoObj) {
+    return res.status(404).json({ result: false, message: "Video not found" });
+  }
+  const videoFilePathAndName = path.join(
+    process.env.PATH_VIDEOS,
+    videoObj.filename
+  );
+  try {
+    // jobQueue.addJob(); // Add job to the queue
+    jobQueue.addJob(videoFilePathAndName, timestampArray); // Pass arguments to queue
+    res.json({ message: "Job successfully queued and processed" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to process job" });
   }
 });
 

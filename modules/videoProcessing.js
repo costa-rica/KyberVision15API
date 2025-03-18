@@ -56,7 +56,7 @@ const deleteVideo = async (videoId) => {
   }
 };
 
-// -- Version 2: accepts single timestamp
+// -- Version 2 [OBE]: accepts single timestamp
 
 async function createVideoMontageSingleClip(videoFilePathAndName, timestamp) {
   return new Promise((resolve, reject) => {
@@ -166,7 +166,7 @@ async function createVideoMontageSingleClip(videoFilePathAndName, timestamp) {
 //       .mergeToFile(outputFilePath, path.dirname(outputFilePath));
 //   });
 // }
-// -- Version 3: accepts array of timestamps, creates video but it creates a video file from the start to end of last timestamp including all in between.
+// -- Version 3 [OBE]: accepts array of timestamps, creates video but it creates a video file from the start to end of last timestamp including all in between.
 async function createVideoMontageClipFromTwoTimestamps(
   videoFilePathAndName,
   timestampArray
@@ -226,7 +226,7 @@ async function createVideoMontageClipFromTwoTimestamps(
   });
 }
 
-// -- Verison 4: creates individual clips the merges them together
+// -- Verison 4 [OBE]: creates individual clips the merges them together
 async function createVideoMontage04(videoFilePathAndName, timestampArray) {
   console.log("🔹 Starting createVideoMontage04...");
   console.log(`🎥 Source Video: ${videoFilePathAndName}`);
