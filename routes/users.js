@@ -217,8 +217,7 @@ router.post(
   })
 );
 
-// 🔹 Send reset token
-// Request password reset
+// 🔹 Send reset token POST /users/request-password-reset
 router.post("/request-password-reset", async (req, res) => {
   const { email } = req.body;
 
