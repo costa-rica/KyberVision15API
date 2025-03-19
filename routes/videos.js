@@ -544,9 +544,10 @@ router.get(
         const { filename } = decoded; // Extract full path
         console.log(`📂 Decoded filename: ${filename}`);
         const videoFilePathAndName = path.join(
-          process.env.PATH_VIDEOS,
+          process.env.PATH_VIDEOS_MONTAGE_COMPLETE,
           filename
         );
+        console.log(`📂 Video file path: ${videoFilePathAndName}`);
         // 🔹 Check if the file exists
         if (!fs.existsSync(videoFilePathAndName)) {
           return res
@@ -572,12 +573,14 @@ router.get(
   }
 );
 
+// 🔹 GET /videos/montage-service/download-video/:tokenizedMontageFilename: Download video montage
 router.get(
   "/montage-service/download-video/:tokenizedMontageFilename",
   (req, res) => {
     console.log(
       "- in GET /montage-service/download-video/:tokenizedMontageFilename"
     );
+
     const { tokenizedMontageFilename } = req.params;
 
     // 🔹 Verify token
@@ -595,7 +598,7 @@ router.get(
         console.log(`📂 Decoded filename: ${filename}`);
 
         const videoFilePathAndName = path.join(
-          process.env.PATH_VIDEOS,
+          process.env.PATH_VIDEOS_MONTAGE_COMPLETE,
           filename
         );
 
@@ -606,21 +609,24 @@ router.get(
             .json({ result: false, message: "File not found" });
         }
 
-        // 🔹 Send the file
+        // ✅ **Force Download Instead of Playing**
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename="${path.basename(videoFilePathAndName)}"`
+        );
+        res.setHeader("Content-Type", "application/octet-stream");
+
+        // ✅ **Send File**
         res.sendFile(videoFilePathAndName, (err) => {
           if (err) {
             console.error("❌ Error sending file:", err);
-            res
-              .status(500)
-              .json({ result: false, message: "Error sending file" });
+            if (!res.headersSent) {
+              res
+                .status(500)
+                .json({ result: false, message: "Error sending file" });
+            }
           } else {
-            console.log("✅ Video sent successfully");
-            res.setHeader(
-              "Content-Disposition",
-              `attachment; filename="${path.basename(videoFilePathAndName)}"`
-            );
-            res.setHeader("Content-Type", "video/mp4");
-            res.sendFile(videoFilePathAndName);
+            console.log("✅ Video sent successfully for download");
           }
         });
       }
