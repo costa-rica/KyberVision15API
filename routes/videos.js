@@ -514,8 +514,8 @@ router.post(
         "host"
       )}/videos/montage-service/finished-video/${tokenizedFilename}`;
     }
-    // await sendVideoMontageCompleteNotificationEmail(user.email, montageUrl);
-    console.log(`-------> IT WORKED !!!!! --------`);
+    await sendVideoMontageCompleteNotificationEmail(user.email, montageUrl);
+    // console.log(`-------> IT WORKED !!!!! --------`);
     res.json({ result: true, message: "Email sent successfully" });
   }
 );
