@@ -353,24 +353,6 @@ router.get("/stream-only/:videoId", async (req, res) => {
   file.on("end", () => console.log("🚀 Streaming finished!"));
 });
 
-// // 🔹 recieve video actions for video montage POST /videos/montage/:videoId
-// router.post("/montage/:videoId", authenticateToken, async (req, res) => {
-//   console.log("- in POST /videos/montage/:videoId");
-//   const { videoId } = req.params;
-//   const { actionsArray } = req.body;
-//   console.log(actionsArray);
-
-//   const videoObj = await Video.findByPk(videoId);
-//   if (!videoObj) {
-//     return res.status(404).json({ result: false, message: "Video not found" });
-//   }
-
-//   res.json({
-//     result: true,
-//     message: `Video montage ${actionsArray.length} actions received`,
-//   });
-// });
-
 // 🔹 Create a video montage from selected actions (POST /videos/montage/:videoId)
 router.post("/montage/:videoId", authenticateToken, async (req, res) => {
   console.log("- in POST /videos/montage/:videoId");
@@ -564,8 +546,6 @@ router.get(
               .json({ result: false, message: "Error sending file" });
           } else {
             console.log("✅ Video sent successfully");
-            res.setHeader("Content-Type", "video/mp4"); // No `Content-Disposition`
-            res.sendFile(videoFilePathAndName);
           }
         });
       }
@@ -633,81 +613,5 @@ router.get(
     );
   }
 );
-
-// // 🔹 GET /videos/montage-service/finished-video/:tokenizedMontageFilename: Video montage completed
-// router.get(
-//   "/montage-service/finished-video/:tokenizedMontageFilename",
-//   (req, res) => {
-//     console.log(
-//       "- in GET /montage-service/finished-video/:tokenizedMontageFilename"
-//     );
-
-//     const { tokenizedMontageFilename } = req.params;
-
-//     // 🔹 Verify token
-//     jwt.verify(
-//       tokenizedMontageFilename,
-//       process.env.JWT_SECRET,
-//       (err, decoded) => {
-//         if (err) {
-//           return res
-//             .status(401)
-//             .json({ result: false, message: "Invalid token" });
-//         }
-
-//         const { filename } = decoded; // Extract full path
-//         console.log(`📂 Decoded filename: ${filename}`);
-
-//         // 🔹 Check if the file exists
-//         if (!fs.existsSync(filename)) {
-//           return res
-//             .status(404)
-//             .json({ result: false, message: "File not found" });
-//         }
-
-//         // 🔹 Send the file
-//         res.sendFile(filename, (err) => {
-//           if (err) {
-//             console.error("❌ Error sending file:", err);
-//             res
-//               .status(500)
-//               .json({ result: false, message: "Error sending file" });
-//           } else {
-//             console.log("✅ Video sent successfully");
-//           }
-//         });
-//       }
-//     );
-//   }
-// );
-// router.get(
-//   "/montage-service/finished-video/:tokenizedMontageFilename",
-//   (req, res) => {
-//     console.log(
-//       "- in GET /montage-service/finished-video/:tokenizedMontageFilename"
-//     );
-//     const { tokenizedMontageFilename } = req.params;
-
-//     // 🔹 Verify token
-//     jwt.verify(
-//       tokenizedMontageFilename,
-//       process.env.JWT_SECRET,
-//       (err, decoded) => {
-//         if (err) {
-//           return res
-//             .status(401)
-//             .json({ result: false, message: "Invalid token" });
-//         }
-//         const { filename } = decoded;
-//         console.log(`filename: ${filename}`);
-//         res.json({
-//           result: true,
-//           message: "Video montage completed",
-//           filename,
-//         });
-//       }
-//     );
-//   }
-// );
 
 module.exports = router;
