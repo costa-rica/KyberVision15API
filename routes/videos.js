@@ -458,22 +458,22 @@ router.post(
         .status(404)
         .json({ result: false, message: "Video not found" });
     }
-    const videoFilePathAndName = path.join(
-      process.env.PATH_VIDEOS,
-      videoObj.filename
-    );
+    // const videoFilePathAndName = path.join(
+    //   process.env.PATH_VIDEOS,
+    //   videoObj.filename
+    // );
 
     const KV_VIDEO_PROCESSOR_PATH = path.join(
       process.env.PATH_KV_VIDEO_PROCESSOR, // e.g., "/Users/nick/Documents/KyberVisionVideoProcessor"
       process.env.NAME_KV_VIDEO_PROCESSOR // e.g., "videoProcessor.js"
     );
-    console.log(`-----> [1] token: ${token}`);
-    writeRequestArgs(req.body, "-01-montage-service");
+    // console.log(`-----> [1] token: ${token}`);
+    // writeRequestArgs(req.body, "-01-montage-service");
     try {
       // Add job to the queue
       jobQueue.addJob(
         KV_VIDEO_PROCESSOR_PATH,
-        videoFilePathAndName,
+        videoObj.filename,
         actionsArray,
         user,
         token
@@ -504,28 +504,79 @@ router.post(
 
     // 🔹 Send email notification
     const tokenizedFilename = jwt.sign({ filename }, process.env.JWT_SECRET);
-    let montageUrl;
-    if (process.env.NODE_ENV === "workstation") {
-      montageUrl = `http://${req.get(
-        "host"
-      )}/videos/montage-service/finished-video/${tokenizedFilename}`;
-    } else {
-      montageUrl = `https://api.kv11.dashanddata.com/videos/montage-service/finished-video/${tokenizedFilename}`;
-    }
-    await sendVideoMontageCompleteNotificationEmail(user.email, montageUrl);
+    // let montageUrl;
+    // if (process.env.NODE_ENV === "workstation") {
+    //   montageUrl = `http://${req.get(
+    //     "host"
+    //   )}/videos/montage-service/finished-video/${tokenizedFilename}`;
+    // } else {
+    //   montageUrl = `https://api.kv11.dashanddata.com/videos/montage-service/finished-video/${tokenizedFilename}`;
+    // }
+    await sendVideoMontageCompleteNotificationEmail(
+      user.email,
+      tokenizedFilename
+    );
     // console.log(`-------> IT WORKED !!!!! --------`);
     res.json({ result: true, message: "Email sent successfully" });
   }
 );
-
-// 🔹 GET /videos/montage-service/finished-video/:tokenizedMontageFilename: Video montage completed
+// 🔹 GET /videos/montage-service/play-video/:tokenizedMontageFilename: Play video montage in browser
 router.get(
-  "/montage-service/finished-video/:tokenizedMontageFilename",
+  "/montage-service/play-video/:tokenizedMontageFilename",
   (req, res) => {
     console.log(
-      "- in GET /montage-service/finished-video/:tokenizedMontageFilename"
+      "- in GET /montage-service/play-video/:tokenizedMontageFilename"
     );
+    const { tokenizedMontageFilename } = req.params;
 
+    // 🔹 Verify token
+    jwt.verify(
+      tokenizedMontageFilename,
+      process.env.JWT_SECRET,
+      (err, decoded) => {
+        if (err) {
+          return res
+            .status(401)
+            .json({ result: false, message: "Invalid token" });
+        }
+
+        const { filename } = decoded; // Extract full path
+        console.log(`📂 Decoded filename: ${filename}`);
+        const videoFilePathAndName = path.join(
+          process.env.PATH_VIDEOS,
+          filename
+        );
+        // 🔹 Check if the file exists
+        if (!fs.existsSync(videoFilePathAndName)) {
+          return res
+            .status(404)
+            .json({ result: false, message: "File not found" });
+        }
+
+        // 🔹 Send the file
+        res.sendFile(videoFilePathAndName, (err) => {
+          if (err) {
+            console.error("❌ Error sending file:", err);
+            res
+              .status(500)
+              .json({ result: false, message: "Error sending file" });
+          } else {
+            console.log("✅ Video sent successfully");
+            res.setHeader("Content-Type", "video/mp4"); // No `Content-Disposition`
+            res.sendFile(videoFilePathAndName);
+          }
+        });
+      }
+    );
+  }
+);
+
+router.get(
+  "/montage-service/download-video/:tokenizedMontageFilename",
+  (req, res) => {
+    console.log(
+      "- in GET /montage-service/download-video/:tokenizedMontageFilename"
+    );
     const { tokenizedMontageFilename } = req.params;
 
     // 🔹 Verify token
@@ -542,15 +593,20 @@ router.get(
         const { filename } = decoded; // Extract full path
         console.log(`📂 Decoded filename: ${filename}`);
 
+        const videoFilePathAndName = path.join(
+          process.env.PATH_VIDEOS,
+          filename
+        );
+
         // 🔹 Check if the file exists
-        if (!fs.existsSync(filename)) {
+        if (!fs.existsSync(videoFilePathAndName)) {
           return res
             .status(404)
             .json({ result: false, message: "File not found" });
         }
 
         // 🔹 Send the file
-        res.sendFile(filename, (err) => {
+        res.sendFile(videoFilePathAndName, (err) => {
           if (err) {
             console.error("❌ Error sending file:", err);
             res
@@ -558,12 +614,65 @@ router.get(
               .json({ result: false, message: "Error sending file" });
           } else {
             console.log("✅ Video sent successfully");
+            res.setHeader(
+              "Content-Disposition",
+              `attachment; filename="${path.basename(videoFilePathAndName)}"`
+            );
+            res.setHeader("Content-Type", "video/mp4");
+            res.sendFile(videoFilePathAndName);
           }
         });
       }
     );
   }
 );
+
+// // 🔹 GET /videos/montage-service/finished-video/:tokenizedMontageFilename: Video montage completed
+// router.get(
+//   "/montage-service/finished-video/:tokenizedMontageFilename",
+//   (req, res) => {
+//     console.log(
+//       "- in GET /montage-service/finished-video/:tokenizedMontageFilename"
+//     );
+
+//     const { tokenizedMontageFilename } = req.params;
+
+//     // 🔹 Verify token
+//     jwt.verify(
+//       tokenizedMontageFilename,
+//       process.env.JWT_SECRET,
+//       (err, decoded) => {
+//         if (err) {
+//           return res
+//             .status(401)
+//             .json({ result: false, message: "Invalid token" });
+//         }
+
+//         const { filename } = decoded; // Extract full path
+//         console.log(`📂 Decoded filename: ${filename}`);
+
+//         // 🔹 Check if the file exists
+//         if (!fs.existsSync(filename)) {
+//           return res
+//             .status(404)
+//             .json({ result: false, message: "File not found" });
+//         }
+
+//         // 🔹 Send the file
+//         res.sendFile(filename, (err) => {
+//           if (err) {
+//             console.error("❌ Error sending file:", err);
+//             res
+//               .status(500)
+//               .json({ result: false, message: "Error sending file" });
+//           } else {
+//             console.log("✅ Video sent successfully");
+//           }
+//         });
+//       }
+//     );
+//   }
+// );
 // router.get(
 //   "/montage-service/finished-video/:tokenizedMontageFilename",
 //   (req, res) => {

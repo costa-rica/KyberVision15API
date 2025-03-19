@@ -34,17 +34,13 @@
             font-size: 12px;
             color: #777;
         }
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            margin: 20px 0;
-            font-size: 16px;
-            color: white;
-            background-color: #007BFF;
-            text-decoration: none;
-            border-radius: 5px;
-        }
 
+        .button-container {
+            display: flex;
+            justify-content: space-around;
+            gap: 10px;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -54,12 +50,45 @@
         </a>
 
         <h2>Your Video Montage is Ready! 🎬</h2>
-        <p>Click the link below to view your completed video montage:</p>
+        
+<div class="button-container">
 
-        <a class="button" href="{{montageLink}}">Watch Now</a>
+    <a class="button" href="{{montageUrlPlay}}" 
+   style="display: inline-block; padding: 10px 20px; font-size: 16px; 
+          color: #FFFFFF !important; background-color: #007BFF !important; 
+          text-decoration: none; border-radius: 5px; 
+          border: 2px solid #007BFF;">
+    Watch
+</a>
+<a class="button" href="{{montageUrlDownload}}" 
+style="display: inline-block; padding: 10px 20px; font-size: 16px; 
+       color: #FFFFFF !important; background-color: #007BFF !important; 
+       text-decoration: none; border-radius: 5px; 
+       border: 2px solid #007BFF;">
+ Download
+</a>
+</div>
 
-        <p>If the button does not work, copy and paste the following link into your browser:</p>
-        <p><a href="{{montageLink}}">{{montageLink}}</a></p>
+
+
+
+        <p>If the button does not work, copy and paste the following link into your browser</p>
+        <ul>
+            <li>Play: 
+                <ul>
+                    <li style="list-style-type: none;">
+                        <a href="{{montageUrlPlay}}">{{montageUrlPlay}}</a>
+                    </li>
+                </ul>
+            </li>
+            <li>Download: 
+                <ul>
+                    <li style="list-style-type: none;">
+                        <a href="{{montageUrlDownload}}">{{montageUrlDownload}}</a>
+                    </li>
+                </ul></li>
+        </ul>
+        
 
         <hr>
         <p class="footer">For more information, visit our website: 

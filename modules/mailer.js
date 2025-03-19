@@ -69,7 +69,10 @@ const sendResetPasswordEmail = async (toEmail, resetLink) => {
   }
 };
 
-const sendVideoMontageCompleteNotificationEmail = async (toEmail, link) => {
+const sendVideoMontageCompleteNotificationEmail = async (
+  toEmail,
+  tokenizedFilename
+) => {
   try {
     const templatePath = path.join(
       __dirname,
@@ -78,6 +81,20 @@ const sendVideoMontageCompleteNotificationEmail = async (toEmail, link) => {
 
     // Read the external HTML file
     let emailTemplate = fs.readFileSync(templatePath, "utf8");
+
+    let montageUrlPlay;
+    let montageUrlDownload;
+    if (process.env.NODE_ENV === "workstation") {
+      montageUrlPlay = `http://${req.get(
+        "host"
+      )}/videos/montage-service/play-video/${tokenizedFilename}`;
+      montageUrlDownload = `http://${req.get(
+        "host"
+      )}/videos/montage-service/download-video/${tokenizedFilename}`;
+    } else {
+      montageUrlPlay = `https://api.kv11.dashanddata.com/videos/montage-service/play-video/${tokenizedFilename}`;
+      montageUrlDownload = `https://api.kv11.dashanddata.com/videos/montage-service/download-video/${tokenizedFilename}`;
+    }
 
     // Replace the placeholder {{montageLink}} with the actual link
     // emailTemplate = emailTemplate.replace("{{montageLink}}", link);
