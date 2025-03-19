@@ -505,14 +505,12 @@ router.post(
     // 🔹 Send email notification
     const tokenizedFilename = jwt.sign({ filename }, process.env.JWT_SECRET);
     let montageUrl;
-    if (req.get("host").includes("localhost")) {
+    if (process.env.NODE_ENV === "workstation") {
       montageUrl = `http://${req.get(
         "host"
       )}/videos/montage-service/finished-video/${tokenizedFilename}`;
     } else {
-      montageUrl = `https://${req.get(
-        "host"
-      )}/videos/montage-service/finished-video/${tokenizedFilename}`;
+      montageUrl = `https://api.kv11.dashanddata.com/videos/montage-service/finished-video/${tokenizedFilename}`;
     }
     await sendVideoMontageCompleteNotificationEmail(user.email, montageUrl);
     // console.log(`-------> IT WORKED !!!!! --------`);
