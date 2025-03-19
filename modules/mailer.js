@@ -85,20 +85,23 @@ const sendVideoMontageCompleteNotificationEmail = async (
     let montageUrlPlay;
     let montageUrlDownload;
     if (process.env.NODE_ENV === "workstation") {
-      montageUrlPlay = `http://${req.get(
-        "host"
-      )}/videos/montage-service/play-video/${tokenizedFilename}`;
-      montageUrlDownload = `http://${req.get(
-        "host"
-      )}/videos/montage-service/download-video/${tokenizedFilename}`;
+      montageUrlPlay = `http://localhost:3000/videos/montage-service/play-video/${tokenizedFilename}`;
+      montageUrlDownload = `http://localhost:3000/videos/montage-service/download-video/${tokenizedFilename}`;
     } else {
       montageUrlPlay = `https://api.kv11.dashanddata.com/videos/montage-service/play-video/${tokenizedFilename}`;
       montageUrlDownload = `https://api.kv11.dashanddata.com/videos/montage-service/download-video/${tokenizedFilename}`;
     }
 
-    // Replace the placeholder {{montageLink}} with the actual link
+    // Replace the placeholder {{montageUrlPlay}} and {{montageUrlDownload}} with the actual link
     // emailTemplate = emailTemplate.replace("{{montageLink}}", link);
-    emailTemplate = emailTemplate.replace(/{{montageLink}}/g, link);
+    emailTemplate = emailTemplate.replace(
+      /{{montageUrlPlay}}/g,
+      montageUrlPlay
+    );
+    emailTemplate = emailTemplate.replace(
+      /{{montageUrlDownload}}/g,
+      montageUrlDownload
+    );
 
     const mailOptions = {
       from: process.env.ADMIN_EMAIL_ADDRESS,

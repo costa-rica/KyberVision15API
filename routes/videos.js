@@ -467,8 +467,9 @@ router.post(
       process.env.PATH_KV_VIDEO_PROCESSOR, // e.g., "/Users/nick/Documents/KyberVisionVideoProcessor"
       process.env.NAME_KV_VIDEO_PROCESSOR // e.g., "videoProcessor.js"
     );
-    // console.log(`-----> [1] token: ${token}`);
-    // writeRequestArgs(req.body, "-01-montage-service");
+    console.log(
+      `- Create video montage step #1: in API GET /montage-service/queue-a-job -`
+    );
     try {
       // Add job to the queue
       jobQueue.addJob(

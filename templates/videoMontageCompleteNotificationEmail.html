@@ -37,10 +37,11 @@
 
         .button-container {
             display: flex;
-            justify-content: space-around;
+            /* justify-content: space-around; */
             gap: 10px;
-            width: 100%;
+            /* width: 100%; */
         }
+        
     </style>
 </head>
 <body>
@@ -51,22 +52,28 @@
 
         <h2>Your Video Montage is Ready! 🎬</h2>
         
-<div class="button-container">
+<div style="display: flex; justify-content: space-around; gap: 10px; width: 100%;">
 
-    <a class="button" href="{{montageUrlPlay}}" 
-   style="display: inline-block; padding: 10px 20px; font-size: 16px; 
-          color: #FFFFFF !important; background-color: #007BFF !important; 
-          text-decoration: none; border-radius: 5px; 
-          border: 2px solid #007BFF;">
-    Watch
-</a>
-<a class="button" href="{{montageUrlDownload}}" 
-style="display: inline-block; padding: 10px 20px; font-size: 16px; 
-       color: #FFFFFF !important; background-color: #007BFF !important; 
-       text-decoration: none; border-radius: 5px; 
-       border: 2px solid #007BFF;">
- Download
-</a>
+    <div style="padding: 0 50px">
+
+        <a class="button" href="{{montageUrlPlay}}" 
+       style="display: inline-block; padding: 10px 20px; font-size: 16px; 
+              color: #FFFFFF !important; background-color: #007BFF !important; 
+              text-decoration: none; border-radius: 5px; 
+              border: 2px solid #007BFF;">
+        Watch
+    </a>
+    </div>
+    <div style="padding: 0 50px">
+
+        <a class="button" href="{{montageUrlDownload}}" 
+        style="display: inline-block; padding: 10px 20px; font-size: 16px; 
+               color: #FFFFFF !important; background-color: #007BFF !important; 
+               text-decoration: none; border-radius: 5px; 
+               border: 2px solid #007BFF;">
+         Download
+        </a>
+    </div>
 </div>
 
 
@@ -74,17 +81,17 @@ style="display: inline-block; padding: 10px 20px; font-size: 16px;
 
         <p>If the button does not work, copy and paste the following link into your browser</p>
         <ul>
-            <li>Play: 
+            <li>Watch: 
                 <ul>
                     <li style="list-style-type: none;">
-                        <a href="{{montageUrlPlay}}">{{montageUrlPlay}}</a>
+                        <a href="{{montageUrlPlay}}" style="font-size: 10px">{{montageUrlPlay}}</a>
                     </li>
                 </ul>
             </li>
             <li>Download: 
                 <ul>
                     <li style="list-style-type: none;">
-                        <a href="{{montageUrlDownload}}">{{montageUrlDownload}}</a>
+                        <a href="{{montageUrlDownload}}" style="font-size: 10px">{{montageUrlDownload}}</a>
                     </li>
                 </ul></li>
         </ul>
