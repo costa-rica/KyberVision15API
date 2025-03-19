@@ -10,8 +10,6 @@ const User = require("../models/User");
 const {
   upload,
   deleteVideo,
-  createVideoMontageSingleClip,
-  createVideoMontageClipFromTwoTimestamps,
   createVideoMontage04,
 } = require("../modules/videoProcessing");
 const path = require("path");
@@ -24,6 +22,7 @@ const {
   sendVideoMontageCompleteNotificationEmail,
 } = require("../modules/mailer");
 const jwt = require("jsonwebtoken");
+const { writeRequestArgs } = require("../modules/common");
 
 // 🔹 Upload Video (POST /videos/upload)
 router.post(
@@ -469,12 +468,12 @@ router.post(
       process.env.NAME_KV_VIDEO_PROCESSOR // e.g., "videoProcessor.js"
     );
     console.log(`-----> [1] token: ${token}`);
+    writeRequestArgs(req.body, "-01-montage-service");
     try {
-      // jobQueue.addJob(); // Add job to the queue
+      // Add job to the queue
       jobQueue.addJob(
         KV_VIDEO_PROCESSOR_PATH,
         videoFilePathAndName,
-        // timestampArray,
         actionsArray,
         user,
         token
@@ -494,6 +493,8 @@ router.post(
     console.log("- in POST /montage-service/video-completed-notify-user");
     const { filename } = req.body;
     const userId = req.user.id;
+    console.log(`headers: ${JSON.stringify(req.headers)}`);
+    writeRequestArgs(req.body, "-04-montage-service");
     const user = await User.findByPk(userId);
     if (!user) {
       return res.status(404).json({ result: false, message: "User not found" });
@@ -513,7 +514,8 @@ router.post(
         "host"
       )}/videos/montage-service/finished-video/${tokenizedFilename}`;
     }
-    await sendVideoMontageCompleteNotificationEmail(user.email, montageUrl);
+    // await sendVideoMontageCompleteNotificationEmail(user.email, montageUrl);
+    console.log(`-------> IT WORKED !!!!! --------`);
     res.json({ result: true, message: "Email sent successfully" });
   }
 );
