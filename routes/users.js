@@ -44,9 +44,7 @@ router.post(
       teamId: 1,
       // rightsFlags: 7,
     });
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-      expiresIn: "5h",
-    });
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET);
 
     await sendRegistrationEmail(email, username)
       .then(() => console.log("Email sent successfully"))
@@ -159,9 +157,7 @@ router.post(
 
     await user.update({ updatedAt: new Date() });
 
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-      expiresIn: "5h",
-    });
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET);
     // const token = jwt.sign({ user }, process.env.JWT_SECRET, {
     //   expiresIn: "5h",
     // });
