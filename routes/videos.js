@@ -297,7 +297,8 @@ router.get("/stream/:videoId", async (req, res) => {
     file.on("end", () => console.log("🚀 Full video sent!"));
   }
 });
-// 🔹 (from 2025-03-10 effort) Stream Video by ID (GET /videos/stream-only/:videoId)
+
+// 🔹 (from 2025-03-29) Stream Video by ID (GET /videos/stream-only/:videoId)
 router.get("/stream-only/:videoId", async (req, res) => {
   console.log(`- in GET /stream-only/${req.params.videoId}`);
   const videoId = req.params.videoId;
@@ -324,12 +325,27 @@ router.get("/stream-only/:videoId", async (req, res) => {
   // Parse range header
   const parts = range.replace(/bytes=/, "").split("-");
   const start = parseInt(parts[0], 10);
-  const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+  const end = parts[1]
+    ? parseInt(parts[1], 10)
+    : Math.min(start + 8388608 - 1, fileSize - 1); // Limit chunk size to 8 MB
   const chunkSize = end - start + 1;
 
-  console.log(`📡 Sending chunk: ${start}-${end} (${chunkSize} bytes)`);
+  console.log(
+    `📡 Preparing to send chunk: ${start}-${end} (${chunkSize} bytes)`
+  );
+  console.log(
+    `📁 Total File Size: ${fileSize} bytes (${(
+      fileSize /
+      (1024 * 1024)
+    ).toFixed(2)} MB)`
+  );
 
-  const file = fs.createReadStream(videoPath, { start, end });
+  // const file = fs.createReadStream(videoPath, { start, end });
+  const file = fs.createReadStream(videoPath, {
+    start,
+    end,
+    highWaterMark: 8388608, // 8 MB internal chunk size
+  });
 
   const head = {
     "Content-Range": `bytes ${start}-${end}/${fileSize}`,
@@ -339,19 +355,84 @@ router.get("/stream-only/:videoId", async (req, res) => {
   };
 
   res.writeHead(206, head);
+
+  // let bytesSent = 0;
+
+  // file.on("data", (chunk) => {
+  //   bytesSent += chunk.length;
+  //   console.log(
+  //     `✅ Chunk sent: ${chunk.length} bytes (Running Total: ${bytesSent} bytes)`
+  //   );
+  // });
+
+  // file.on("end", () => {
+  //   console.log(
+  //     `✅ Total data sent: ${bytesSent} bytes (${(
+  //       bytesSent /
+  //       (1024 * 1024)
+  //     ).toFixed(2)} MB)`
+  //   );
+  //   console.log("🚀 Streaming finished!");
+  // });
+
   file.pipe(res);
-
-  // Monitor data being sent
-  let bytesSent = 0;
-  file.on("data", (chunk) => {
-    bytesSent += chunk.length;
-    console.log(
-      `✅ Chunk sent: ${chunk.length} bytes (Total: ${bytesSent} bytes)`
-    );
-  });
-
-  file.on("end", () => console.log("🚀 Streaming finished!"));
 });
+
+// // 🔹 (from 2025-03-10 effort) Stream Video by ID (GET /videos/stream-only/:videoId)
+// router.get("/stream-only/:videoId", async (req, res) => {
+//   console.log(`- in GET /stream-only/${req.params.videoId}`);
+//   const videoId = req.params.videoId;
+//   const videoObj = await Video.findByPk(videoId);
+
+//   if (!videoObj) {
+//     return res.status(404).json({ result: false, message: "Video not found" });
+//   }
+
+//   const videoPath = path.join(process.env.PATH_VIDEOS, videoObj.filename);
+//   console.log(`Streaming video: ${videoPath}`);
+
+//   const stat = fs.statSync(videoPath);
+//   const fileSize = stat.size;
+//   const range = req.headers.range;
+
+//   if (!range) {
+//     console.log("❌ No range request - refusing full response.");
+//     return res.status(416).send("Range header required for streaming");
+//   }
+
+//   console.log(`range: ${range}`);
+
+//   // Parse range header
+//   const parts = range.replace(/bytes=/, "").split("-");
+//   const start = parseInt(parts[0], 10);
+//   const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+//   const chunkSize = end - start + 1;
+
+//   console.log(`📡 Sending chunk: ${start}-${end} (${chunkSize} bytes)`);
+
+//   const file = fs.createReadStream(videoPath, { start, end });
+
+//   const head = {
+//     "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+//     "Accept-Ranges": "bytes",
+//     "Content-Length": chunkSize,
+//     "Content-Type": "video/mp4",
+//   };
+
+//   res.writeHead(206, head);
+//   file.pipe(res);
+
+//   // Monitor data being sent
+//   let bytesSent = 0;
+//   file.on("data", (chunk) => {
+//     bytesSent += chunk.length;
+//     console.log(
+//       `✅ Chunk sent: ${chunk.length} bytes (Total: ${bytesSent} bytes)`
+//     );
+//   });
+
+//   file.on("end", () => console.log("🚀 Streaming finished!"));
+// });
 
 // 🔹 Create a video montage from selected actions (POST /videos/montage/:videoId)
 router.post("/montage/:videoId", authenticateToken, async (req, res) => {
