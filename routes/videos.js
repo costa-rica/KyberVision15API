@@ -299,7 +299,7 @@ router.get("/stream/:videoId", async (req, res) => {
 });
 
 // 🔹 (from 2025-03-29) Stream Video by ID (GET /videos/stream-only/:videoId)
-router.get("/stream-only/:videoId", async (req, res) => {
+router.get("/stream-only/:videoId", authenticateToken, async (req, res) => {
   console.log(`- in GET /stream-only/${req.params.videoId}`);
   const videoId = req.params.videoId;
   const videoObj = await Video.findByPk(videoId);
@@ -320,8 +320,6 @@ router.get("/stream-only/:videoId", async (req, res) => {
     return res.status(416).send("Range header required for streaming");
   }
 
-  console.log(`range: ${range}`);
-
   // Parse range header
   const parts = range.replace(/bytes=/, "").split("-");
   const start = parseInt(parts[0], 10);
@@ -333,14 +331,7 @@ router.get("/stream-only/:videoId", async (req, res) => {
   console.log(
     `📡 Preparing to send chunk: ${start}-${end} (${chunkSize} bytes)`
   );
-  console.log(
-    `📁 Total File Size: ${fileSize} bytes (${(
-      fileSize /
-      (1024 * 1024)
-    ).toFixed(2)} MB)`
-  );
 
-  // const file = fs.createReadStream(videoPath, { start, end });
   const file = fs.createReadStream(videoPath, {
     start,
     end,
@@ -355,25 +346,6 @@ router.get("/stream-only/:videoId", async (req, res) => {
   };
 
   res.writeHead(206, head);
-
-  // let bytesSent = 0;
-
-  // file.on("data", (chunk) => {
-  //   bytesSent += chunk.length;
-  //   console.log(
-  //     `✅ Chunk sent: ${chunk.length} bytes (Running Total: ${bytesSent} bytes)`
-  //   );
-  // });
-
-  // file.on("end", () => {
-  //   console.log(
-  //     `✅ Total data sent: ${bytesSent} bytes (${(
-  //       bytesSent /
-  //       (1024 * 1024)
-  //     ).toFixed(2)} MB)`
-  //   );
-  //   console.log("🚀 Streaming finished!");
-  // });
 
   file.pipe(res);
 });
