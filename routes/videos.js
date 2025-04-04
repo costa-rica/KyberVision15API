@@ -350,6 +350,39 @@ router.get("/stream-only/:videoId", authenticateToken, async (req, res) => {
   file.pipe(res);
 });
 
+const axios = require("axios");
+// 🔹 Test Stream Proxy (GET /videos/test-stream/BigBuckBunny.mp4)
+router.get("/test-stream/BigBuckBunny.mp4", async (req, res) => {
+  console.log(`- in GET /test-stream/BigBuckBunny.mp4`);
+
+  const targetUrl =
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"; // Replace with your URL if needed
+  const range = req.headers.range;
+
+  if (!range) {
+    console.log("❌ No range request - refusing full response.");
+    return res.status(416).send("Range header required for streaming");
+  }
+
+  try {
+    const response = await axios.get(targetUrl, {
+      headers: { Range: range },
+      responseType: "stream",
+    });
+
+    console.log(`📡 Proxying chunk with status: ${response.status}`);
+
+    // Pass headers from the upstream response to the client
+    res.writeHead(response.status, response.headers);
+
+    // Pipe the upstream stream to the client
+    response.data.pipe(res);
+  } catch (error) {
+    console.error("❌ Error proxying the stream:", error.message);
+    res.status(500).send("Failed to proxy the video stream.");
+  }
+});
+
 // // 🔹 (from 2025-03-10 effort) Stream Video by ID (GET /videos/stream-only/:videoId)
 // router.get("/stream-only/:videoId", async (req, res) => {
 //   console.log(`- in GET /stream-only/${req.params.videoId}`);
