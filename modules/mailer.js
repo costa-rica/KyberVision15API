@@ -124,17 +124,3 @@ module.exports = {
   sendResetPasswordEmail,
   sendVideoMontageCompleteNotificationEmail,
 };
-
-// // Create a transporter for Microsoft 365 (Office 365) SMTP
-// const transporter = nodemailer.createTransport({
-//   host: "smtp.office365.com",
-//   port: 587, // Secure submission port for Office 365
-//   secure: false, // Must be false since STARTTLS is used
-//   auth: {
-//     user: process.env.ADMIN_EMAIL_ADDRESS, // Your Office 365 email
-//     pass: process.env.ADMIN_EMAIL_PASSWORD, // Your email password or app password
-//   },
-//   tls: {
-//     ciphers: "SSLv3",
-//   },
-// });

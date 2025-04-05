@@ -4,18 +4,21 @@ const { authenticateToken } = require("../middleware/auth");
 const router = express.Router();
 const Video = require("../models/Video");
 // const Match = require("../models/Match");
-const Script = require("../models/Script");
-const SyncContract = require("../models/SyncContract");
+// const Script = require("../models/Script");
+// const SyncContract = require("../models/SyncContract");
 const User = require("../models/User");
 const {
   upload,
   deleteVideo,
   createVideoMontage04,
+  renameVideoFile,
+  requestJobQueuerVideoUploaderProcessing,
 } = require("../modules/videoProcessing");
+const { updateSyncContractsWithVideoId } = require("../modules/scripts");
 const path = require("path");
 const fs = require("fs");
 const { getMatchWithTeams } = require("../modules/match");
-const ffmpeg = require("fluent-ffmpeg");
+// const ffmpeg = require("fluent-ffmpeg");
 // const { spawn } = require("child_process");
 const jobQueue = require("../modules/queueService");
 const {
@@ -61,45 +64,74 @@ router.post(
         url: "placeholder",
         videoFileSizeInMb: fileSizeMb,
       });
+      // After the video entry is created
+      const renamedFilename = renameVideoFile(newVideo.id, matchId);
+      const renamedFilePath = path.join(
+        process.env.PATH_VIDEOS_UPLOAD03,
+        renamedFilename
+      );
+
+      // Rename the file
+      fs.renameSync(
+        path.join(process.env.PATH_VIDEOS_UPLOAD03, req.file.filename),
+        renamedFilePath
+      );
+      // // Rename the file (use async method)
+      // await fs.promises.rename(
+      //   path.join(process.env.PATH_VIDEOS_UPLOAD03, req.file.filename),
+      //   renamedFilePath
+      // );
+
+      // Update the video entry in the database
+      await newVideo.update({ filename: renamedFilename });
+
+      // // Optionally, add a slight delay before triggering the microservice
+      // await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Step 3: Generate and update video URL
       const videoURL = `https://${req.get("host")}/videos/${newVideo.id}`;
       await newVideo.update({ url: videoURL });
 
-      // Step 4: Find all scripts with the matching matchId
-      const scripts = await Script.findAll({
-        where: { matchId },
-      });
+      // // Step 4: Find all scripts with the matching matchId
+      // const scripts = await Script.findAll({
+      //   where: { matchId },
+      // });
 
-      if (scripts.length === 0) {
-        console.log(`⚠️ No scripts found for matchId: ${matchId}`);
-      } else {
-        console.log(
-          `📜 Found ${scripts.length} script(s) for matchId: ${matchId}`
-        );
-      }
+      // if (scripts.length === 0) {
+      //   console.log(`⚠️ No scripts found for matchId: ${matchId}`);
+      // } else {
+      //   console.log(
+      //     `📜 Found ${scripts.length} script(s) for matchId: ${matchId}`
+      //   );
+      // }
 
-      let syncContractUpdates = 0;
+      // let syncContractUpdates = 0;
 
       // Step 5: Loop through all scripts and update SyncContracts
-      for (const script of scripts) {
-        const syncContracts = await SyncContract.findAll({
-          where: { scriptId: script.id },
-        });
+      let syncContractUpdates = await updateSyncContractsWithVideoId(
+        newVideo.id,
+        matchId
+      );
+      // for (const script of scripts) {
+      //   const syncContracts = await SyncContract.findAll({
+      //     where: { scriptId: script.id },
+      //   });
 
-        if (syncContracts.length > 0) {
-          console.log(
-            `🔄 Updating ${syncContracts.length} SyncContract(s) for scriptId: ${script.id}`
-          );
+      //   if (syncContracts.length > 0) {
+      //     console.log(
+      //       `🔄 Updating ${syncContracts.length} SyncContract(s) for scriptId: ${script.id}`
+      //     );
 
-          for (const syncContract of syncContracts) {
-            await syncContract.update({ videoId: newVideo.id });
-            syncContractUpdates++;
-          }
-        } else {
-          console.log(`⚠️ No SyncContracts found for scriptId: ${script.id}`);
-        }
-      }
+      //     for (const syncContract of syncContracts) {
+      //       await syncContract.update({ videoId: newVideo.id });
+      //       syncContractUpdates++;
+      //     }
+      //   } else {
+      //     console.log(`⚠️ No SyncContracts found for scriptId: ${script.id}`);
+      //   }
+      // }
+
+      await requestJobQueuerVideoUploaderProcessing(newVideo.filename);
 
       // Step 6: Send success response
       res.status(201).json({
@@ -265,16 +297,16 @@ router.get("/stream/:videoId", async (req, res) => {
     res.writeHead(206, head);
     file.pipe(res);
 
-    // Monitor data being sent
-    let bytesSent = 0;
-    file.on("data", (chunk) => {
-      bytesSent += chunk.length;
-      console.log(
-        `✅ Chunk sent: ${chunk.length} bytes (Total: ${bytesSent} bytes)`
-      );
-    });
+    // // Monitor data being sent
+    // let bytesSent = 0;
+    // file.on("data", (chunk) => {
+    //   bytesSent += chunk.length;
+    //   console.log(
+    //     `✅ Chunk sent: ${chunk.length} bytes (Total: ${bytesSent} bytes)`
+    //   );
+    // });
 
-    file.on("end", () => console.log("🚀 Video streaming finished!"));
+    // file.on("end", () => console.log("🚀 Video streaming finished!"));
   } else {
     console.log("⚠️ No range request - sending full video.");
 
@@ -286,15 +318,15 @@ router.get("/stream/:videoId", async (req, res) => {
     const file = fs.createReadStream(videoPath);
     file.pipe(res);
 
-    let bytesSent = 0;
-    file.on("data", (chunk) => {
-      bytesSent += chunk.length;
-      console.log(
-        `✅ Chunk sent: ${chunk.length} bytes (Total: ${bytesSent} bytes)`
-      );
-    });
+    // let bytesSent = 0;
+    // file.on("data", (chunk) => {
+    //   bytesSent += chunk.length;
+    //   console.log(
+    //     `✅ Chunk sent: ${chunk.length} bytes (Total: ${bytesSent} bytes)`
+    //   );
+    // });
 
-    file.on("end", () => console.log("🚀 Full video sent!"));
+    // file.on("end", () => console.log("🚀 Full video sent!"));
   }
 });
 

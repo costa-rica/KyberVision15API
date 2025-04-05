@@ -4,21 +4,37 @@ const fs = require("fs");
 // const Video = require("../models/video");
 const Video = require("../models/Video");
 const ffmpeg = require("fluent-ffmpeg");
+const axios = require("axios"); // Make sure Axios is installed: yarn add axios
 
 // Ensure the videos directory exists
-const uploadPath = process.env.PATH_VIDEOS;
+// const uploadPath = process.env.PATH_VIDEOS;
+const uploadPath = process.env.PATH_VIDEOS_UPLOAD03;
 if (!fs.existsSync(uploadPath)) {
   fs.mkdirSync(uploadPath, { recursive: true });
 }
-
-// Configure multer storage
+// Multer attaches an object representing the file to the request under the property req.file.
+// - Multer creates the req.file.filename property
+// Configure multer storage [cb = callback]
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadPath);
   },
+  // filename: (req, file, cb) => {
+  //   const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+  //   cb(null, uniqueSuffix + path.extname(file.originalname));
+  // },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+    const now = new Date();
+
+    // Format the datetime as YYYYMMDD-HHMMSS
+    const formattedDate = now.toISOString().split("T")[0].replace(/-/g, "");
+    const formattedTime = now.toTimeString().split(" ")[0].replace(/:/g, "");
+    const datetimeString = `${formattedDate}-${formattedTime}`;
+
+    // Generate the complete filename
+    const filename = `${datetimeString}${path.extname(file.originalname)}`;
+
+    cb(null, filename);
   },
 });
 
@@ -35,13 +51,25 @@ const upload = multer({
   },
 });
 
+// ✅ New function to rename video files with desired format
+const renameVideoFile = (videoId, matchId) => {
+  // Ensure the numbers are formatted with leading zeros
+  const formattedVideoId = videoId.toString().padStart(4, "0");
+  const formattedMatchId = matchId.toString().padStart(4, "0");
+  return `videoId${formattedVideoId}-matchId${formattedMatchId}.mp4`;
+};
+
+// need to update this with all the places the video could be
 const deleteVideo = async (videoId) => {
   try {
     const video = await Video.findByPk(videoId);
     if (!video) {
       return { success: false, error: "Video not found" };
     }
-    const filePath = path.join(process.env.PATH_VIDEOS, video.filename);
+    const filePath = path.join(
+      process.env.PATH_VIDEOS_UPLOAD03,
+      video.filename
+    );
     fs.unlink(filePath, (err) => {
       if (err) {
         console.error(`❌ Error deleting file ${filePath}:`, err);
@@ -342,10 +370,35 @@ async function createVideoMontage04(videoFilePathAndName, timestampArray) {
   return finalOutputPath;
 }
 
+// ✅ Function to request processing from JobQueuer03 microservice
+const requestJobQueuerVideoUploaderProcessing = async (filename) => {
+  const url = `${process.env.URL_KV_JOB_QUEUER}/video-uploader/process`;
+
+  try {
+    const response = await axios.post(url, { filename });
+
+    console.log(
+      `✅ Successfully requested JobQueuer03 to process: ${filename}`
+    );
+    console.log(`📡 Response from JobQueuer03: ${response.data}`);
+
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error(
+      `❌ Failed to request JobQueuer03 for processing: ${filename}`
+    );
+    console.error(`📝 Error: ${error.message}`);
+
+    return { success: false, error: error.message };
+  }
+};
+
 module.exports = {
   upload,
   deleteVideo,
   createVideoMontageSingleClip,
   createVideoMontageClipFromTwoTimestamps,
   createVideoMontage04,
+  renameVideoFile,
+  requestJobQueuerVideoUploaderProcessing,
 };
