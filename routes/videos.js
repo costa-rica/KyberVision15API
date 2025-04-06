@@ -1,6 +1,6 @@
 const express = require("express");
-const { authenticateToken } = require("../middleware/auth");
 // const { authenticateToken } = require("../modules/userAuthentication");
+const { authenticateToken } = require("../modules/userAuthentication");
 const router = express.Router();
 const Video = require("../models/Video");
 // const Match = require("../models/Match");
@@ -18,8 +18,7 @@ const { updateSyncContractsWithVideoId } = require("../modules/scripts");
 const path = require("path");
 const fs = require("fs");
 const { getMatchWithTeams } = require("../modules/match");
-// const ffmpeg = require("fluent-ffmpeg");
-// const { spawn } = require("child_process");
+
 const jobQueue = require("../modules/queueService");
 const {
   sendVideoMontageCompleteNotificationEmail,
@@ -37,6 +36,7 @@ router.post(
       console.log("📌 - in POST /videos/upload");
 
       const { matchId } = req.body;
+      const user = req.user;
 
       // Validate required fields
       if (!matchId) {
@@ -63,75 +63,42 @@ router.post(
         filename: req.file.filename,
         url: "placeholder",
         videoFileSizeInMb: fileSizeMb,
+        pathToVideoFile: process.env.PATH_VIDEOS_UPLOAD03,
+        processingStatus: "pending",
       });
-      // After the video entry is created
-      const renamedFilename = renameVideoFile(newVideo.id, matchId);
+      console.log("---- user ---");
+      console.log(user);
+
+      // Step 2.1: Rename the uploaded file
+      const renamedFilename = renameVideoFile(newVideo.id, matchId, user.id);
       const renamedFilePath = path.join(
         process.env.PATH_VIDEOS_UPLOAD03,
         renamedFilename
       );
 
-      // Rename the file
+      // Step 2.2:Rename the file
       fs.renameSync(
         path.join(process.env.PATH_VIDEOS_UPLOAD03, req.file.filename),
         renamedFilePath
       );
-      // // Rename the file (use async method)
-      // await fs.promises.rename(
-      //   path.join(process.env.PATH_VIDEOS_UPLOAD03, req.file.filename),
-      //   renamedFilePath
-      // );
-
-      // Update the video entry in the database
-      await newVideo.update({ filename: renamedFilename });
-
-      // // Optionally, add a slight delay before triggering the microservice
-      // await new Promise((resolve) => setTimeout(resolve, 500));
+      await newVideo.update({
+        filename: renamedFilename,
+      });
 
       // Step 3: Generate and update video URL
       const videoURL = `https://${req.get("host")}/videos/${newVideo.id}`;
       await newVideo.update({ url: videoURL });
-
-      // // Step 4: Find all scripts with the matching matchId
-      // const scripts = await Script.findAll({
-      //   where: { matchId },
-      // });
-
-      // if (scripts.length === 0) {
-      //   console.log(`⚠️ No scripts found for matchId: ${matchId}`);
-      // } else {
-      //   console.log(
-      //     `📜 Found ${scripts.length} script(s) for matchId: ${matchId}`
-      //   );
-      // }
-
-      // let syncContractUpdates = 0;
 
       // Step 5: Loop through all scripts and update SyncContracts
       let syncContractUpdates = await updateSyncContractsWithVideoId(
         newVideo.id,
         matchId
       );
-      // for (const script of scripts) {
-      //   const syncContracts = await SyncContract.findAll({
-      //     where: { scriptId: script.id },
-      //   });
 
-      //   if (syncContracts.length > 0) {
-      //     console.log(
-      //       `🔄 Updating ${syncContracts.length} SyncContract(s) for scriptId: ${script.id}`
-      //     );
-
-      //     for (const syncContract of syncContracts) {
-      //       await syncContract.update({ videoId: newVideo.id });
-      //       syncContractUpdates++;
-      //     }
-      //   } else {
-      //     console.log(`⚠️ No SyncContracts found for scriptId: ${script.id}`);
-      //   }
-      // }
-
-      await requestJobQueuerVideoUploaderProcessing(newVideo.filename);
+      await requestJobQueuerVideoUploaderProcessing(
+        newVideo.filename,
+        newVideo.id
+      );
 
       // Step 6: Send success response
       res.status(201).json({

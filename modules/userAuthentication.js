@@ -1,11 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-// function createToken(user) {
-//   const secretKey = process.env.SECRET_KEY;
-//   return jwt.sign({ user }, secretKey, { expiresIn: "7d" });
-// }
-
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
@@ -13,14 +8,11 @@ function authenticateToken(req, res, next) {
     return res.status(401).json({ message: "Token is required" });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+  jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
     if (err) return res.status(403).json({ message: "Invalid token" });
-    const { user } = decoded;
-    console.log("in authThoken func()");
-    console.log("user: ");
-    console.log(user);
-
-    req.user = user.user; // Set the decoded payload directly to req.user
+    const { id } = decoded;
+    const user = await User.findByPk(id);
+    req.user = user;
     next();
   });
 }

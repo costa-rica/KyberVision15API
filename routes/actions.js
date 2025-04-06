@@ -2,7 +2,7 @@
 const Action = require("../models/Action");
 const express = require("express");
 const router = express.Router();
-const { authenticateToken } = require("../middleware/auth");
+const { authenticateToken } = require("../modules/userAuthentication");
 
 //? Route pour récupérer toutes les actions
 router.get("/", authenticateToken, async (req, res) => {

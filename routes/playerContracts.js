@@ -1,7 +1,7 @@
 const express = require("express");
 const Player = require("../models/Player");
 const PlayerContract = require("../models/PlayerContract");
-const { authenticateToken } = require("../middleware/auth");
+const { authenticateToken } = require("../modules/userAuthentication");
 const { checkBodyReturnMissing } = require("../modules/common");
 const router = express.Router();
 const { isPlayerDuplicate } = require("../modules/players");

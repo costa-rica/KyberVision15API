@@ -3,7 +3,7 @@ const router = express.Router();
 const SyncContract = require("../models/SyncContract");
 const Video = require("../models/Video");
 const Script = require("../models/Script");
-const { authenticateToken } = require("../middleware/auth");
+const { authenticateToken } = require("../modules/userAuthentication");
 // const { checkBodyReturnMissing } = require("../modules/common");
 //? GET all SyncContracts
 router.get("/", authenticateToken, async (req, res) => {

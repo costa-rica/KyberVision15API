@@ -23,6 +23,14 @@ const Video = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    pathToVideoFile: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    processingStatus: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
     url: {
       type: DataTypes.STRING,
     },

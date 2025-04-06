@@ -3,7 +3,7 @@ var router = express.Router();
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
 const GroupContract = require("../models/GroupContract");
-const { authenticateToken } = require("../middleware/auth");
+const { authenticateToken } = require("../modules/userAuthentication");
 const jwt = require("jsonwebtoken");
 const {
   sendRegistrationEmail,
@@ -45,6 +45,7 @@ router.post(
       // rightsFlags: 7,
     });
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET);
+    // const token = jwt.sign({ user }, process.env.JWT_SECRET);
 
     await sendRegistrationEmail(email, username)
       .then(() => console.log("Email sent successfully"))
@@ -157,6 +158,7 @@ router.post(
 
     await user.update({ updatedAt: new Date() });
 
+    // const token = jwt.sign({ user }, process.env.JWT_SECRET);
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET);
     // const token = jwt.sign({ user }, process.env.JWT_SECRET, {
     //   expiresIn: "5h",

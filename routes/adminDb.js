@@ -42,7 +42,7 @@ const { Parser } = require("json2csv");
 // Promisify fs functions
 const mkdirAsync = promisify(fs.mkdir);
 // const writeFileAsync = promisify(fs.writeFile);
-const { authenticateToken } = require("../middleware/auth");
+const { authenticateToken } = require("../modules/userAuthentication");
 const { checkBodyReturnMissing } = require("../modules/common");
 const unlinkAsync = promisify(fs.unlink);
 const {

@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt");
 const Team = require("../models/Team");
 const GroupContract = require("../models/GroupContract");
 const League = require("../models/League");
-const { authenticateToken } = require("../middleware/auth");
+const { authenticateToken } = require("../modules/userAuthentication");
 const { checkBodyReturnMissing } = require("../modules/common");
 const router = express.Router();
 

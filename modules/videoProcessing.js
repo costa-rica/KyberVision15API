@@ -1,7 +1,6 @@
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
-// const Video = require("../models/video");
 const Video = require("../models/Video");
 const ffmpeg = require("fluent-ffmpeg");
 const axios = require("axios"); // Make sure Axios is installed: yarn add axios
@@ -19,10 +18,6 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadPath);
   },
-  // filename: (req, file, cb) => {
-  //   const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-  //   cb(null, uniqueSuffix + path.extname(file.originalname));
-  // },
   filename: (req, file, cb) => {
     const now = new Date();
 
@@ -52,11 +47,12 @@ const upload = multer({
 });
 
 // ✅ New function to rename video files with desired format
-const renameVideoFile = (videoId, matchId) => {
+const renameVideoFile = (videoId, matchId, userId) => {
   // Ensure the numbers are formatted with leading zeros
   const formattedVideoId = videoId.toString().padStart(4, "0");
-  const formattedMatchId = matchId.toString().padStart(4, "0");
-  return `videoId${formattedVideoId}-matchId${formattedMatchId}.mp4`;
+  // const formattedMatchId = matchId.toString();
+  // const formattedUserId = userId.toString().padStart(4, "0");
+  return `videoId${formattedVideoId}-matchId${matchId}-userId${userId}.mp4`;
 };
 
 // need to update this with all the places the video could be
@@ -371,11 +367,11 @@ async function createVideoMontage04(videoFilePathAndName, timestampArray) {
 }
 
 // ✅ Function to request processing from JobQueuer03 microservice
-const requestJobQueuerVideoUploaderProcessing = async (filename) => {
+const requestJobQueuerVideoUploaderProcessing = async (filename, videoId) => {
   const url = `${process.env.URL_KV_JOB_QUEUER}/video-uploader/process`;
 
   try {
-    const response = await axios.post(url, { filename });
+    const response = await axios.post(url, { filename, videoId });
 
     console.log(
       `✅ Successfully requested JobQueuer03 to process: ${filename}`

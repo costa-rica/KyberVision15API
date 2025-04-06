@@ -1,7 +1,7 @@
 var express = require("express");
 var router = express.Router();
 
-const { authenticateToken } = require("../middleware/auth");
+const { authenticateToken } = require("../modules/userAuthentication");
 
 /* GET home page. */
 router.get("/", function (req, res, next) {
@@ -14,7 +14,7 @@ router.get("/test", function (req, res, next) {
 /* GET /test-auth */
 router.get("/test-auth", authenticateToken, function (req, res, next) {
   console.log("in test-auth route");
-  console.log(req.user);
+  console.log(req.user.username);
   res.json({ result: true, message: "this works" });
 });
 
