@@ -66,8 +66,8 @@ router.post(
         pathToVideoFile: process.env.PATH_VIDEOS_UPLOAD03,
         processingStatus: "pending",
       });
-      console.log("---- user ---");
-      console.log(user);
+      // console.log("---- user ---");
+      // console.log(user);
 
       // Step 2.1: Rename the uploaded file
       const renamedFilename = renameVideoFile(newVideo.id, matchId, user.id);
