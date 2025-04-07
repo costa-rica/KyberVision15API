@@ -62,13 +62,27 @@ const deleteVideo = async (videoId) => {
     if (!video) {
       return { success: false, error: "Video not found" };
     }
-    const filePath = path.join(
+    const filePathToVideoFile = path.join(
+      // process.env.PATH_VIDEOS_UPLOAD03,
+      video.pathToVideoFile,
+      video.filename
+    );
+
+    fs.unlink(filePathToVideoFile, (err) => {
+      if (err) {
+        console.error(`❌ Error deleting file ${filePath}:`, err);
+      }
+    });
+    const filePathToVideoFileInUpload = path.join(
       process.env.PATH_VIDEOS_UPLOAD03,
       video.filename
     );
-    fs.unlink(filePath, (err) => {
+    fs.unlink(filePathToVideoFileInUpload, (err) => {
       if (err) {
-        console.error(`❌ Error deleting file ${filePath}:`, err);
+        console.error(
+          `❌ Error deleting file ${filePathToVideoFileInUpload}:`,
+          err
+        );
       }
     });
 
