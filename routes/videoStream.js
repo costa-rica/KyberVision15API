@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
-
+const Video = require("../models/Video");
+const path = require("path");
+const fs = require("fs");
 const axios = require("axios");
 
 router.get("/:videoId", async (req, res) => {
@@ -17,7 +19,8 @@ router.get("/:videoId", async (req, res) => {
   }
   // get video stats (about 61MB)
   //   const videoPath = "bigbuck.mp4";
-  const videoPath = path.join(process.env.PATH_VIDEOS, videoObj.filename);
+  // const videoPath = path.join(process.env.PATH_VIDEOS, videoObj.filename);
+  const videoPath = path.join(videoObj.pathToVideoFile, videoObj.filename);
   const videoSize = fs.statSync(videoPath).size;
 
   // Parse Range

@@ -1,7 +1,13 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-function authenticateToken(req, res, next) {
+async function authenticateToken(req, res, next) {
+  if (process.env.AUTHENTIFICATION_TURNED_OFF === "true") {
+    const user = await User.findOne({ where: { email: "nrodrig1@gmail.com" } });
+    req.user = { id: user.id };
+    return next();
+  }
+
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
   if (token == null) {

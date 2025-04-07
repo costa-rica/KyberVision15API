@@ -308,7 +308,10 @@ router.get("/stream-only/:videoId", authenticateToken, async (req, res) => {
     return res.status(404).json({ result: false, message: "Video not found" });
   }
 
-  const videoPath = path.join(process.env.PATH_VIDEOS, videoObj.filename);
+  // const videoPath = path.join(process.env.PATH_VIDEOS, videoObj.filename);
+  console.log(`videoObj.pathToVideoFile: ${videoObj.pathToVideoFile}`);
+  const videoPath = path.join(videoObj.pathToVideoFile, videoObj.filename);
+
   console.log(`Streaming video: ${videoPath}`);
 
   const stat = fs.statSync(videoPath);
