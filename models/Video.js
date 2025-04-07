@@ -40,6 +40,9 @@ const Video = sequelize.define(
     videoFileSizeInMb: {
       type: DataTypes.FLOAT,
     },
+    originalVideoFilename: {
+      type: DataTypes.STRING,
+    },
   },
   {
     tableName: "videos",

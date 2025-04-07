@@ -65,6 +65,7 @@ router.post(
         videoFileSizeInMb: fileSizeMb,
         pathToVideoFile: process.env.PATH_VIDEOS_UPLOAD03,
         processingStatus: "pending",
+        originalVideoFilename: req.file.originalname,
       });
       // console.log("---- user ---");
       // console.log(user);
