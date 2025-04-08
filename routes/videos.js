@@ -35,6 +35,9 @@ router.post(
     try {
       console.log("📌 - in POST /videos/upload");
 
+      // Set timeout for this specific request to 2400 seconds (40 minutes)
+      req.setTimeout(2400 * 1000);
+
       const { matchId } = req.body;
       const user = req.user;
 
