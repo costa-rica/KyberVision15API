@@ -1,6 +1,6 @@
 ![Logo](./docs/images/kyberVisionLogo01.png)
 
-# API v0.11.0
+# API v0.14.0
 
 ## Description
 
@@ -16,34 +16,32 @@ The API for Kyber Vision. This applicaiton allows users to:
 
 ### Developer Notes
 
-- This version merged the changes from KV API10 (through the db_backup_01 branch which is ahead of main as of 2025-03-13)
-- As of 2025-03-13, the servers kv10 and kv11 are running the db_backup_01 branch
-  - We intend that these will be merged to main after some testing and no errors
-  - If errors exist, we can compare this repo KV API11 with the KV API10 main branch
+- The big change is chaning the platform to stream volleyball match videos through YouTube.
+- Upload video the start KyberVision14YouTuber
 
 ## .env
 
 ```
-APP_NAME=KyberVisionAPI11
+APP_NAME=KyberVision14API
 JWT_SECRET=<your_code_here>
 PORT=<your_port_here>
-PATH_DATABASE=/home/dashanddata_user/databases/KyberVisionAPI11/
-PATH_VIDEOS=/home/dashanddata_user/project_resources/KyberVisionAPI11/match_videos
-PATH_VIDEOS_MONTAGE_CLIPS=/home/dashanddata_user/project_resources/KyberVisionAPI11/match_videos/montage_clips
-PATH_VIDEOS_MONTAGE_COMPLETE=/home/dashanddata_user/project_resources/KyberVisionAPI11/match_videos/montage_complete
+PATH_DATABASE=/home/dashanddata_user/databases/KyberVision14API/
+PATH_VIDEOS=/home/dashanddata_user/project_resources/KyberVision14API/match_videos
+PATH_VIDEOS_MONTAGE_CLIPS=/home/dashanddata_user/project_resources/KyberVision14API/match_videos/montage_clips
+PATH_VIDEOS_MONTAGE_COMPLETE=/home/dashanddata_user/project_resources/KyberVision14API/match_videos/montage_complete
 NAME_DB=kv11.db
 ADMIN_EMAIL_ADDRESS=kyber.vision.info@gmail.com
 ADMIN_EMAIL_PASSWORD="app pass word from google app password"
-PATH_DB_BACKUPS=/home/shared/project_resources/KyberVisionAPI11/db_backups
-PATH_PROJECT_RESOURCES=/home/shared/project_resources/KyberVisionAPI11
+PATH_DB_BACKUPS=/home/shared/project_resources/KyberVision14API/db_backups
+PATH_PROJECT_RESOURCES=/home/shared/project_resources/KyberVision14API
 ADMIN_EMAIL_KV_MANAGER_WEBSITE=["nrodrig1@gmail.com"]
 URL_KV_MANAGER_WEBSITE=https://kv11-manager.dashanddata.com
 ```
 
 ## nodemailer emails
 
-- create folder in project_resources/KyberVisionAPI11
-  - "project_resources/KyberVisionAPI11/nodemailer_html_templates"
+- create folder in project_resources/KyberVision14API
+  - "project_resources/KyberVision14API/nodemailer_html_templates"
 
 ## Sync Video Process details found here (as of 2025-03-13):
 

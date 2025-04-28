@@ -1,5 +1,22 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+const {
+  sequelize,
+  User,
+  Video,
+  Action,
+  CompetitionContract,
+  Complex,
+  GroupContract,
+  League,
+  Match,
+  OpponentServeTimestamp,
+  Player,
+  PlayerContract,
+  Point,
+  Script,
+  SyncContract,
+  Team,
+} = require("kybervision14db");
 
 async function authenticateToken(req, res, next) {
   if (process.env.AUTHENTIFICATION_TURNED_OFF === "true") {

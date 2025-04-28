@@ -1,6 +1,7 @@
-const User = require("../models/User");
-const GroupContract = require("../models/GroupContract");
+const { User, GroupContract } = require("kybervision14db");
 const bcrypt = require("bcrypt");
+const path = require("path");
+const fs = require("fs");
 
 async function onStartUpCreateEnvUsers() {
   if (!process.env.ADMIN_EMAIL_KV_MANAGER_WEBSITE) {
@@ -50,4 +51,12 @@ async function onStartUpCreateEnvUsers() {
   }
 }
 
-module.exports = { onStartUpCreateEnvUsers };
+function createAppDirectories() {
+  if (!fs.existsSync(process.env.PATH_VIDEOS_UPLOAD03)) {
+    fs.mkdirSync(uploadPath, { recursive: true });
+  }
+  if (!fs.existsSync(process.env.PATH_VIDEOS)) {
+    fs.mkdirSync(uploadPath, { recursive: true });
+  }
+}
+module.exports = { onStartUpCreateEnvUsers, createAppDirectories };

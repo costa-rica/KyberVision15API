@@ -1,7 +1,25 @@
 const express = require("express");
-const Player = require("../models/Player");
-const PlayerContract = require("../models/PlayerContract");
-const Team = require("../models/Team");
+// const Player = require("kybervision14db");
+// const PlayerContract = require("kybervision14db");
+// const Team = require("kybervision14db");
+const {
+  sequelize,
+  User,
+  Video,
+  Action,
+  CompetitionContract,
+  Complex,
+  GroupContract,
+  League,
+  Match,
+  OpponentServeTimestamp,
+  Player,
+  PlayerContract,
+  Point,
+  Script,
+  SyncContract,
+  Team,
+} = require("kybervision14db");
 const { authenticateToken } = require("../modules/userAuthentication");
 const { checkBodyReturnMissing } = require("../modules/common");
 const router = express.Router();

@@ -1,44 +1,63 @@
 // const { GroupContract, Match } = require('../models');
-const GroupContract = require("../models/GroupContract");
-const Match = require("../models/Match");
-const express = require('express');
+// const GroupContract = require("kybervision14db");
+// const Match = require("kybervision14db");
+const {
+  sequelize,
+  User,
+  Video,
+  Action,
+  CompetitionContract,
+  Complex,
+  GroupContract,
+  League,
+  Match,
+  OpponentServeTimestamp,
+  Player,
+  PlayerContract,
+  Point,
+  Script,
+  SyncContract,
+  Team,
+} = require("kybervision14db");
+const express = require("express");
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken } = require("../middleware/auth");
 
 const RIGHTS = {
   VALIDATE_GROUP_REQUEST: 1 << 0, // b0
-  CREATE_REMOVE_PLAYER: 1 << 1,   // b1
-  WRITE_ENABLED: 1 << 2,          // b2
+  CREATE_REMOVE_PLAYER: 1 << 1, // b1
+  WRITE_ENABLED: 1 << 2, // b2
 };
 
 //? Route pour récupérer tous les GroupContracts.
-router.get(
-  '/',
-  authenticateToken,
-  async (req, res) => {
-    try {
-      const group = await GroupContract.findAll();
-      res.status(200).json(group);
-    } catch (error) {
-      res.status(500).json({ error: 'Erreur lors de la récupération des actions', details: error.message });
-    }
+router.get("/", authenticateToken, async (req, res) => {
+  try {
+    const group = await GroupContract.findAll();
+    res.status(200).json(group);
+  } catch (error) {
+    res.status(500).json({
+      error: "Erreur lors de la récupération des actions",
+      details: error.message,
+    });
   }
-);
+});
 
 //? Route pour récupérer les matchs d'un utilisateur via ses GroupContracts
-router.get('/:userId', authenticateToken, async (req, res) => {
+router.get("/:userId", authenticateToken, async (req, res) => {
   try {
     const { userId } = req.params;
 
     const groupContracts = await GroupContract.findAll({
       where: { User_ID: userId },
-      attributes: ['id'],
+      attributes: ["id"],
     });
 
     const groupContractIds = groupContracts.map((group) => group.id);
 
     if (groupContractIds.length === 0) {
-      return res.status(404).json({ message: "Aucun match trouvé pour cet utilisateur." });
+      return res
+        .status(404)
+        .json({ message: "Aucun match trouvé pour cet utilisateur." });
     }
 
     const matches = await Match.findAll({
@@ -49,8 +68,11 @@ router.get('/:userId', authenticateToken, async (req, res) => {
 
     res.status(200).json(matches);
   } catch (error) {
-    console.error("Erreur lors de la récupération des matchs de l'utilisateur :", error);
-    res.status(500).json({ message: 'Erreur interne du serveur.' });
+    console.error(
+      "Erreur lors de la récupération des matchs de l'utilisateur :",
+      error
+    );
+    res.status(500).json({ message: "Erreur interne du serveur." });
   }
 });
 
@@ -63,7 +85,11 @@ router.post("/", authenticateToken, async (req, res) => {
       return res.status(400).json({ message: "userId et teamId sont requis." });
     }
 
-    const rightsFlags = rights ?? (RIGHTS.VALIDATE_GROUP_REQUEST | RIGHTS.CREATE_REMOVE_PLAYER | RIGHTS.WRITE_ENABLED);
+    const rightsFlags =
+      rights ??
+      RIGHTS.VALIDATE_GROUP_REQUEST |
+        RIGHTS.CREATE_REMOVE_PLAYER |
+        RIGHTS.WRITE_ENABLED;
 
     const groupContract = await GroupContract.create({
       User_ID: userId,
@@ -80,6 +106,5 @@ router.post("/", authenticateToken, async (req, res) => {
     res.status(500).json({ message: "Erreur interne du serveur." });
   }
 });
-
 
 module.exports = router;

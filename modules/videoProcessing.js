@@ -1,16 +1,33 @@
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
-const Video = require("../models/Video");
+const {
+  sequelize,
+  User,
+  Video,
+  Action,
+  CompetitionContract,
+  Complex,
+  GroupContract,
+  League,
+  Match,
+  OpponentServeTimestamp,
+  Player,
+  PlayerContract,
+  Point,
+  Script,
+  SyncContract,
+  Team,
+} = require("kybervision14db");
 const ffmpeg = require("fluent-ffmpeg");
 const axios = require("axios"); // Make sure Axios is installed: yarn add axios
 
 // Ensure the videos directory exists
 // const uploadPath = process.env.PATH_VIDEOS;
-const uploadPath = process.env.PATH_VIDEOS_UPLOAD03;
-if (!fs.existsSync(uploadPath)) {
-  fs.mkdirSync(uploadPath, { recursive: true });
-}
+// const uploadPath = process.env.PATH_VIDEOS_UPLOAD03;
+// if (!fs.existsSync(uploadPath)) {
+//   fs.mkdirSync(uploadPath, { recursive: true });
+// }
 // Multer attaches an object representing the file to the request under the property req.file.
 // - Multer creates the req.file.filename property
 // Configure multer storage [cb = callback]
@@ -403,6 +420,28 @@ const requestJobQueuerVideoUploaderProcessing = async (filename, videoId) => {
   }
 };
 
+const requestJobQueuerVideoUploaderYouTubeProcessing = async (
+  filename,
+  videoId
+) => {
+  const url = `${process.env.URL_KV_JOB_QUEUER}/youtube-video-uploader/add-video`;
+  console.log(
+    `[in modules/reqeuest...] sending request to ${url} for ${filename}`
+  );
+  try {
+    const response = await axios.post(url, { filename, videoId });
+    console.log(`📡 Response from JobQueuer03: ${response.data}`);
+
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error(
+      `❌ Failed to request JobQueuer03 for processing: ${filename}`
+    );
+    console.error(`📝 Error: ${error.message}`);
+
+    return { success: false, error: error.message };
+  }
+};
 module.exports = {
   upload,
   deleteVideo,
@@ -411,4 +450,5 @@ module.exports = {
   createVideoMontage04,
   renameVideoFile,
   requestJobQueuerVideoUploaderProcessing,
+  requestJobQueuerVideoUploaderYouTubeProcessing,
 };

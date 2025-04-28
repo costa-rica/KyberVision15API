@@ -1,8 +1,26 @@
 var express = require("express");
 var router = express.Router();
 const bcrypt = require("bcrypt");
-const User = require("../models/User");
-const GroupContract = require("../models/GroupContract");
+// const User = require("kybervision14db");
+// const GroupContract = require("kybervision14db");
+const {
+  sequelize,
+  User,
+  Video,
+  Action,
+  CompetitionContract,
+  Complex,
+  GroupContract,
+  League,
+  Match,
+  OpponentServeTimestamp,
+  Player,
+  PlayerContract,
+  Point,
+  Script,
+  SyncContract,
+  Team,
+} = require("kybervision14db");
 const { authenticateToken } = require("../modules/userAuthentication");
 const jwt = require("jsonwebtoken");
 const {

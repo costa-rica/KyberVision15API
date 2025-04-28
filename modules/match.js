@@ -1,5 +1,21 @@
-const Match = require("../models/Match");
-const Team = require("../models/Team");
+const {
+  sequelize,
+  User,
+  Video,
+  Action,
+  CompetitionContract,
+  Complex,
+  GroupContract,
+  League,
+  Match,
+  OpponentServeTimestamp,
+  Player,
+  PlayerContract,
+  Point,
+  Script,
+  SyncContract,
+  Team,
+} = require("kybervision14db");
 
 const createMatch = async (matchData) => {
   try {

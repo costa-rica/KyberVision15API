@@ -1,24 +1,42 @@
 const csvParser = require("csv-parser");
 const fs = require("fs");
 const path = require("path");
-const sequelize = require("../models/_connection"); // Import Sequelize instance
+// const {sequelize} = require("kybervision14db"); // Import Sequelize instance
 
 // Import models directly
-const User = require("../models/User");
-const Video = require("../models/Video");
-const Action = require("../models/Action");
-const CompetitionContract = require("../models/CompetitionContract");
-const Complex = require("../models/Complex");
-const GroupContract = require("../models/GroupContract");
-const League = require("../models/League");
-const Match = require("../models/Match");
-const OpponentServeTimestamp = require("../models/OpponentServeTimestamp");
-const Player = require("../models/Player");
-const PlayerContract = require("../models/PlayerContract");
-const Point = require("../models/Point");
-const Script = require("../models/Script");
-const SyncContract = require("../models/SyncContract");
-const Team = require("../models/Team");
+// const User = require("kybervision14db");
+// const Video = require("kybervision14db");
+// const Action = require("kybervision14db");
+// const CompetitionContract = require("kybervision14db");
+// const Complex = require("kybervision14db");
+// const GroupContract = require("kybervision14db");
+// const League = require("kybervision14db");
+// const Match = require("kybervision14db");
+// const OpponentServeTimestamp = require("kybervision14db");
+// const Player = require("kybervision14db");
+// const PlayerContract = require("kybervision14db");
+// const Point = require("kybervision14db");
+// const Script = require("kybervision14db");
+// const SyncContract = require("kybervision14db");
+// const Team = require("kybervision14db");
+const {
+  sequelize,
+  User,
+  Video,
+  Action,
+  CompetitionContract,
+  Complex,
+  GroupContract,
+  League,
+  Match,
+  OpponentServeTimestamp,
+  Player,
+  PlayerContract,
+  Point,
+  Script,
+  SyncContract,
+  Team,
+} = require("kybervision14db");
 
 const { promisify } = require("util");
 const archiver = require("archiver");

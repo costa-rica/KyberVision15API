@@ -19,6 +19,7 @@
     "fs": "^0.0.1-security",
     "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.2",
+    "kybervision14db": "file:../KyberVision14Db",
     "mongoose": "^8.9.5",
     "morgan": "~1.9.1",
     "multer": "^1.4.5-lts.1",

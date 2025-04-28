@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const Video = require("../models/Video");
+const { Video } = require("kybervision14db");
 const path = require("path");
 const fs = require("fs");
-const axios = require("axios");
+// const axios = require("axios");
 
 router.get("/:videoId", async (req, res) => {
   console.log("- in GET /video-stream/:videoId");

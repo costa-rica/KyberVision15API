@@ -1,5 +1,21 @@
-const Script = require("../models/Script");
-const SyncContract = require("../models/SyncContract");
+const {
+  sequelize,
+  User,
+  Video,
+  Action,
+  CompetitionContract,
+  Complex,
+  GroupContract,
+  League,
+  Match,
+  OpponentServeTimestamp,
+  Player,
+  PlayerContract,
+  Point,
+  Script,
+  SyncContract,
+  Team,
+} = require("kybervision14db");
 
 // Accepts an array of action objects and a deltaTime (in seconds)
 // Returns the estimated start of video timestamp

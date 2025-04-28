@@ -1,4 +1,21 @@
-const Player = require("../models/Player");
+const {
+  sequelize,
+  User,
+  Video,
+  Action,
+  CompetitionContract,
+  Complex,
+  GroupContract,
+  League,
+  Match,
+  OpponentServeTimestamp,
+  Player,
+  PlayerContract,
+  Point,
+  Script,
+  SyncContract,
+  Team,
+} = require("kybervision14db");
 const { Op } = require("sequelize");
 /**
  * Function to check if a player with the same firstName, lastName, and birthDate (only date, ignoring time) exists

@@ -1,5 +1,5 @@
 // const { Action } = require('../models');
-const Action = require("../models/Action");
+const { Action } = require("kybervision14db");
 const express = require("express");
 const router = express.Router();
 const { authenticateToken } = require("../modules/userAuthentication");

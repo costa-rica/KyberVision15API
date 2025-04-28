@@ -1,6 +1,8 @@
 require("dotenv").config();
-const sequelize = require("./models/_connection");
-require("./models/_associations");
+const { sequelize } = require("kybervision14db");
+const { createAppDirectories } = require("./modules/onStartUp");
+createAppDirectories();
+// require("./models/_associations");
 var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");

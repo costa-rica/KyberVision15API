@@ -1,18 +1,14 @@
 const express = require("express");
-// const { authenticateToken } = require("../modules/userAuthentication");
 const { authenticateToken } = require("../modules/userAuthentication");
 const router = express.Router();
-const Video = require("../models/Video");
-// const Match = require("../models/Match");
-// const Script = require("../models/Script");
-// const SyncContract = require("../models/SyncContract");
-const User = require("../models/User");
+const { User, Video } = require("kybervision14db");
 const {
   upload,
   deleteVideo,
   createVideoMontage04,
   renameVideoFile,
   requestJobQueuerVideoUploaderProcessing,
+  requestJobQueuerVideoUploaderYouTubeProcessing,
 } = require("../modules/videoProcessing");
 const { updateSyncContractsWithVideoId } = require("../modules/scripts");
 const path = require("path");
@@ -705,5 +701,79 @@ router.get(
     );
   }
 );
+
+// 🔹 POST /videos/upload-youtube
+router.post("/upload-youtube", async (req, res) => {
+  console.log("- in POST /videos/upload-youtube");
+
+  // Set timeout for this specific request to 2400 seconds (40 minutes)
+  req.setTimeout(2400 * 1000);
+
+  const { matchId } = req.body;
+  const user = req.user;
+
+  // Validate required fields
+  if (!matchId) {
+    return res
+      .status(400)
+      .json({ result: false, message: "matchId is required" });
+  }
+
+  if (!req.file) {
+    return res
+      .status(400)
+      .json({ result: false, message: "No video file uploaded" });
+  }
+
+  // Step 1: Get video file size in MB
+  const fileSizeBytes = req.file.size;
+  const fileSizeMb = (fileSizeBytes / (1024 * 1024)).toFixed(2);
+
+  console.log(`📁 Video File Size: ${fileSizeMb} MB`);
+
+  // Step 2: Create video entry with placeholder URL & file size
+  const newVideo = await Video.create({
+    matchId: parseInt(matchId, 10),
+    filename: req.file.filename,
+    url: "placeholder",
+    videoFileSizeInMb: fileSizeMb,
+    pathToVideoFile: process.env.PATH_VIDEOS_UPLOAD03,
+    processingStatus: "pending",
+    originalVideoFilename: req.file.originalname,
+  });
+  // console.log("---- user ---");
+  // console.log(user);
+
+  // Step 2.1: Rename the uploaded file
+  const renamedFilename = renameVideoFile(newVideo.id, matchId, user.id);
+  const renamedFilePath = path.join(
+    process.env.PATH_VIDEOS_UPLOAD03,
+    renamedFilename
+  );
+
+  // Step 2.2:Rename the file
+  fs.renameSync(
+    path.join(process.env.PATH_VIDEOS_UPLOAD03, req.file.filename),
+    renamedFilePath
+  );
+  await newVideo.update({
+    filename: renamedFilename,
+  });
+
+  // Step 3: Generate and update video URL
+  const videoURL = `https://${req.get("host")}/videos/${newVideo.id}`;
+  await newVideo.update({ url: videoURL });
+
+  // Step 5: Loop through all scripts and update SyncContracts
+  let syncContractUpdates = await updateSyncContractsWithVideoId(
+    newVideo.id,
+    matchId
+  );
+
+  // Step 6: spawn KyberVision14YouTuber child process
+  const jobQueuerResponse =
+    await requestJobQueuerVideoUploaderYouTubeProcessing(filename, videoId);
+  return res.json({ result: true });
+});
 
 module.exports = router;
