@@ -1,24 +1,7 @@
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
-const {
-  sequelize,
-  User,
-  Video,
-  Action,
-  CompetitionContract,
-  Complex,
-  GroupContract,
-  League,
-  Match,
-  OpponentServeTimestamp,
-  Player,
-  PlayerContract,
-  Point,
-  Script,
-  SyncContract,
-  Team,
-} = require("kybervision14db");
+const { Video } = require("kybervision14db");
 const ffmpeg = require("fluent-ffmpeg");
 const axios = require("axios"); // Make sure Axios is installed: yarn add axios
 
@@ -33,7 +16,7 @@ const axios = require("axios"); // Make sure Axios is installed: yarn add axios
 // Configure multer storage [cb = callback]
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadPath);
+    cb(null, process.env.PATH_VIDEOS_UPLOAD03);
   },
   filename: (req, file, cb) => {
     const now = new Date();
