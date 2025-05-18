@@ -1,6 +1,6 @@
 ![Logo](./docs/images/kyberVisionLogo01.png)
 
-# API v0.14.0
+# API v0.15.0
 
 ## Description
 
@@ -17,31 +17,31 @@ The API for Kyber Vision. This applicaiton allows users to:
 ### Developer Notes
 
 - The big change is chaning the platform to stream volleyball match videos through YouTube.
-- Upload video the start KyberVision14YouTuber
+- Upload video the start KyberVision15YouTuber
 
 ## .env
 
 ```
-APP_NAME=KyberVision14API
+APP_NAME=KyberVision15API
 JWT_SECRET=<your_code_here>
 PORT=<your_port_here>
-PATH_DATABASE=/home/dashanddata_user/databases/KyberVision14API/
-PATH_VIDEOS=/home/dashanddata_user/project_resources/KyberVision14API/match_videos
-PATH_VIDEOS_MONTAGE_CLIPS=/home/dashanddata_user/project_resources/KyberVision14API/match_videos/montage_clips
-PATH_VIDEOS_MONTAGE_COMPLETE=/home/dashanddata_user/project_resources/KyberVision14API/match_videos/montage_complete
+PATH_DATABASE=/home/dashanddata_user/databases/KyberVision15API/
+PATH_VIDEOS=/home/dashanddata_user/project_resources/KyberVision15API/match_videos
+PATH_VIDEOS_MONTAGE_CLIPS=/home/dashanddata_user/project_resources/KyberVision15API/match_videos/montage_clips
+PATH_VIDEOS_MONTAGE_COMPLETE=/home/dashanddata_user/project_resources/KyberVision15API/match_videos/montage_complete
 NAME_DB=kv11.db
 ADMIN_EMAIL_ADDRESS=kyber.vision.info@gmail.com
 ADMIN_EMAIL_PASSWORD="app pass word from google app password"
-PATH_DB_BACKUPS=/home/shared/project_resources/KyberVision14API/db_backups
-PATH_PROJECT_RESOURCES=/home/shared/project_resources/KyberVision14API
+PATH_DB_BACKUPS=/home/shared/project_resources/KyberVision15API/db_backups
+PATH_PROJECT_RESOURCES=/home/shared/project_resources/KyberVision15API
 ADMIN_EMAIL_KV_MANAGER_WEBSITE=["nrodrig1@gmail.com"]
 URL_KV_MANAGER_WEBSITE=https://kv11-manager.dashanddata.com
 ```
 
 ## nodemailer emails
 
-- create folder in project_resources/KyberVision14API
-  - "project_resources/KyberVision14API/nodemailer_html_templates"
+- create folder in project_resources/KyberVision15API
+  - "project_resources/KyberVision15API/nodemailer_html_templates"
 
 ## Sync Video Process details found here (as of 2025-03-13):
 
