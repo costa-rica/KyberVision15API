@@ -1,71 +1,23 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
-// const { Team, GroupContract } = require('../models');
-// const Team = require("kybervision14db");
-// const GroupContract = require("kybervision14db");
-// const League = require("kybervision14db");
 const {
-  sequelize,
-  User,
-  Video,
-  Action,
-  CompetitionContract,
-  Complex,
   GroupContract,
-  League,
-  Match,
-  OpponentServeTimestamp,
   Player,
   PlayerContract,
-  Point,
-  Script,
-  SyncContract,
   Team,
-} = require("kybervision14db");
+} = require("kybervision15db");
 const { authenticateToken } = require("../modules/userAuthentication");
-const { checkBodyReturnMissing } = require("../modules/common");
 const router = express.Router();
 
-const RIGHTS = {
-  VALIDATE_GROUP_REQUEST: 1 << 0, // b0
-  CREATE_REMOVE_PLAYER: 1 << 1, // b1
-  WRITE_ENABLED: 1 << 2, // b2
-};
-
-const checkRights = (userRights, requiredRights) => {
-  return (userRights & requiredRights) === requiredRights;
-};
-
-// Middleware pour vérifier les droits d'un utilisateur
-const hasRights = (requiredRights) => {
-  return async (req, res, next) => {
-    const userId = req.user.id;
-    const { teamId } = req.body;
-
-    try {
-      const groupContract = await GroupContract.findOne({
-        where: { User_ID: userId, Team_ID: teamId },
-      });
-
-      if (!groupContract) {
-        return res.status(403).json({
-          message: "Accès refusé : vous n'êtes pas dans cette équipe.",
-        });
-      }
-
-      if (!checkRights(groupContract.Rights_flags, requiredRights)) {
-        return res.status(403).json({
-          message: "Accès refusé : vous n'avez pas les droits requis.",
-        });
-      }
-
-      next();
-    } catch (error) {
-      console.error("Erreur lors de la vérification des droits :", error);
-      res.status(500).json({ message: "Erreur interne du serveur." });
-    }
-  };
-};
+router.get("/", authenticateToken, async (req, res) => {
+  try {
+    const teams = await Team.findAll();
+    res.status(200).json(teams);
+  } catch (error) {
+    console.error("Error fetching teams:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 // Route : Créer une équipe
 router.post("/", authenticateToken, async (req, res) => {
@@ -106,63 +58,63 @@ router.post("/", authenticateToken, async (req, res) => {
   }
 });
 
-// Route : Ajouter un utilisateur à une équipe
-// TODO: remove group password
-router.post(
-  "/add-user",
-  authenticateToken,
-  hasRights(RIGHTS.CREATE_REMOVE_PLAYER),
-  async (req, res) => {
-    try {
-      const { userId, teamId, groupPassword } = req.body;
+// // Route : Ajouter un utilisateur à une équipe
+// // TODO: remove group password
+// router.post(
+//   "/add-user",
+//   authenticateToken,
+//   hasRights(RIGHTS.CREATE_REMOVE_PLAYER),
+//   async (req, res) => {
+//     try {
+//       const { userId, teamId, groupPassword } = req.body;
 
-      if (!userId || !teamId || !groupPassword) {
-        return res
-          .status(400)
-          .json({ message: "Tous les champs sont requis." });
-      }
+//       if (!userId || !teamId || !groupPassword) {
+//         return res
+//           .status(400)
+//           .json({ message: "Tous les champs sont requis." });
+//       }
 
-      const team = await Team.findByPk(teamId);
-      if (!team) {
-        return res.status(404).json({ message: "Équipe non trouvée." });
-      }
+//       const team = await Team.findByPk(teamId);
+//       if (!team) {
+//         return res.status(404).json({ message: "Équipe non trouvée." });
+//       }
 
-      const isPasswordValid = await bcrypt.compare(
-        groupPassword,
-        team.GroupPassword
-      );
-      if (!isPasswordValid) {
-        return res.status(403).json({ message: "Mot de passe incorrect." });
-      }
+//       const isPasswordValid = await bcrypt.compare(
+//         groupPassword,
+//         team.GroupPassword
+//       );
+//       if (!isPasswordValid) {
+//         return res.status(403).json({ message: "Mot de passe incorrect." });
+//       }
 
-      const existingContract = await GroupContract.findOne({
-        where: { User_ID: userId, Team_ID: teamId },
-      });
+//       const existingContract = await GroupContract.findOne({
+//         where: { User_ID: userId, Team_ID: teamId },
+//       });
 
-      if (existingContract) {
-        return res
-          .status(400)
-          .json({ message: "L'utilisateur est déjà dans cette équipe." });
-      }
+//       if (existingContract) {
+//         return res
+//           .status(400)
+//           .json({ message: "L'utilisateur est déjà dans cette équipe." });
+//       }
 
-      await GroupContract.create({
-        userId,
-        teamId,
-        rightsFlags: RIGHTS.WRITE_ENABLED,
-      });
+//       await GroupContract.create({
+//         userId,
+//         teamId,
+//         rightsFlags: RIGHTS.WRITE_ENABLED,
+//       });
 
-      res
-        .status(201)
-        .json({ message: "Utilisateur ajouté à l'équipe avec succès." });
-    } catch (error) {
-      console.error(
-        "Erreur lors de l'ajout de l'utilisateur à l'équipe :",
-        error
-      );
-      res.status(500).json({ message: "Erreur interne du serveur." });
-    }
-  }
-);
+//       res
+//         .status(201)
+//         .json({ message: "Utilisateur ajouté à l'équipe avec succès." });
+//     } catch (error) {
+//       console.error(
+//         "Erreur lors de l'ajout de l'utilisateur à l'équipe :",
+//         error
+//       );
+//       res.status(500).json({ message: "Erreur interne du serveur." });
+//     }
+//   }
+// );
 
 // Route : Récupérer les équipes d'un utilisateur
 router.get("/:userId", authenticateToken, async (req, res) => {
@@ -184,36 +136,36 @@ router.get("/:userId", authenticateToken, async (req, res) => {
   }
 });
 
-// Route : Modifier une équipe
-router.put(
-  "/:teamId",
-  authenticateToken,
-  hasRights(RIGHTS.WRITE_ENABLED),
-  async (req, res) => {
-    try {
-      const { teamId } = req.params;
-      const { teamName, city, coachName } = req.body;
+// // Route : Modifier une équipe
+// router.put(
+//   "/:teamId",
+//   authenticateToken,
+//   hasRights(RIGHTS.WRITE_ENABLED),
+//   async (req, res) => {
+//     try {
+//       const { teamId } = req.params;
+//       const { teamName, city, coachName } = req.body;
 
-      const team = await Team.findByPk(teamId);
-      if (!team) {
-        return res.status(404).json({ message: "Équipe non trouvée." });
-      }
+//       const team = await Team.findByPk(teamId);
+//       if (!team) {
+//         return res.status(404).json({ message: "Équipe non trouvée." });
+//       }
 
-      team.TeamName = teamName || team.TeamName;
-      team.City = city || team.City;
-      team.CoachName = coachName || team.CoachName;
+//       team.TeamName = teamName || team.TeamName;
+//       team.City = city || team.City;
+//       team.CoachName = coachName || team.CoachName;
 
-      await team.save();
+//       await team.save();
 
-      res
-        .status(200)
-        .json({ message: "Équipe mise à jour avec succès.", team });
-    } catch (error) {
-      console.error("Erreur lors de la modification de l'équipe :", error);
-      res.status(500).json({ message: "Erreur interne du serveur." });
-    }
-  }
-);
+//       res
+//         .status(200)
+//         .json({ message: "Équipe mise à jour avec succès.", team });
+//     } catch (error) {
+//       console.error("Erreur lors de la modification de l'équipe :", error);
+//       res.status(500).json({ message: "Erreur interne du serveur." });
+//     }
+//   }
+// );
 
 router.get("/test", (req, res) => {
   res.json({ message: "Route team/test works!" });

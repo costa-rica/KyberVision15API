@@ -1,7 +1,7 @@
 const express = require("express");
-// const Player = require("kybervision14db");
-// const PlayerContract = require("kybervision14db");
-// const Team = require("kybervision14db");
+// const Player = require("kybervision15db");
+// const PlayerContract = require("kybervision15db");
+// const Team = require("kybervision15db");
 const {
   sequelize,
   User,
@@ -19,7 +19,7 @@ const {
   Script,
   SyncContract,
   Team,
-} = require("kybervision14db");
+} = require("kybervision15db");
 const { authenticateToken } = require("../modules/userAuthentication");
 const { checkBodyReturnMissing } = require("../modules/common");
 const router = express.Router();
@@ -167,6 +167,7 @@ router.get("/team/:teamId", authenticateToken, async (req, res) => {
       attributes: ["id", "teamId", "playerId", "shirtNumber"], // Include PlayerContract fields
     },
   });
+  console.log(`req.params.teamId: ${req.params.teamId}`);
   const team = await Team.findByPk(req.params.teamId);
   console.log(team.teamName);
   // console.log(team);
@@ -190,6 +191,7 @@ router.get("/team/:teamId", authenticateToken, async (req, res) => {
     console.log(`- no players found`);
   }
 
+  // console.log(playersArray);
   res.json({ result: true, team, players: playersArray });
 });
 

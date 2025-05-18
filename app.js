@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { sequelize } = require("kybervision14db");
+const { sequelize } = require("kybervision15db");
 const { createAppDirectories } = require("./modules/onStartUp");
 createAppDirectories();
 // require("./models/_associations");

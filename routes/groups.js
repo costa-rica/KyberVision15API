@@ -1,6 +1,3 @@
-// const { GroupContract, Match } = require('../models');
-// const GroupContract = require("kybervision14db");
-// const Match = require("kybervision14db");
 const {
   sequelize,
   User,
@@ -18,92 +15,57 @@ const {
   Script,
   SyncContract,
   Team,
-} = require("kybervision14db");
+} = require("kybervision15db");
 const express = require("express");
 const router = express.Router();
-const { authenticateToken } = require("../middleware/auth");
+const { authenticateToken } = require("../modules/userAuthentication");
 
-const RIGHTS = {
-  VALIDATE_GROUP_REQUEST: 1 << 0, // b0
-  CREATE_REMOVE_PLAYER: 1 << 1, // b1
-  WRITE_ENABLED: 1 << 2, // b2
-};
-
-//? Route pour récupérer tous les GroupContracts.
-router.get("/", authenticateToken, async (req, res) => {
+// POST groups/create/:teamId
+router.post("/create/:teamId", authenticateToken, async (req, res) => {
   try {
-    const group = await GroupContract.findAll();
-    res.status(200).json(group);
+    const teamId = req.params.teamId;
+    const userId = req.user.id;
+    const { isSuperUser, isAdmin, isCoach } = req.body;
+    // create or modify group contract
+    const [group, created] = await GroupContract.upsert(
+      { userId, teamId, isSuperUser, isAdmin, isCoach },
+      { returning: true }
+    );
+    // res.status(201).json(group);
+    res.status(created ? 201 : 200).json({
+      message: created
+        ? "Groupe créé avec succès"
+        : "Groupe modifié avec succès",
+      group,
+    });
   } catch (error) {
     res.status(500).json({
-      error: "Erreur lors de la récupération des actions",
+      error: "Erreur lors de la création du groupe",
       details: error.message,
     });
   }
 });
 
-//? Route pour récupérer les matchs d'un utilisateur via ses GroupContracts
-router.get("/:userId", authenticateToken, async (req, res) => {
+// GET groups/
+router.get("/", authenticateToken, async (req, res) => {
   try {
-    const { userId } = req.params;
-
+    const userId = req.user.id;
+    // const groups = await GroupContract.findAll({ where: { userId } });
     const groupContracts = await GroupContract.findAll({
-      where: { User_ID: userId },
-      attributes: ["id"],
-    });
-
-    const groupContractIds = groupContracts.map((group) => group.id);
-
-    if (groupContractIds.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "Aucun match trouvé pour cet utilisateur." });
-    }
-
-    const matches = await Match.findAll({
-      where: {
-        Group_ID: groupContractIds,
+      where: { userId },
+      include: {
+        model: Team,
+        attributes: ["id", "teamName", "city", "coachName"], // specify fields you want
       },
     });
 
-    res.status(200).json(matches);
+    const teams = groupContracts.map((gc) => gc.Team);
+    res.status(200).json({ teams });
   } catch (error) {
-    console.error(
-      "Erreur lors de la récupération des matchs de l'utilisateur :",
-      error
-    );
-    res.status(500).json({ message: "Erreur interne du serveur." });
-  }
-});
-
-//? Route pour créer un GroupContract
-router.post("/", authenticateToken, async (req, res) => {
-  try {
-    const { userId, teamId, rights } = req.body;
-
-    if (!userId || !teamId) {
-      return res.status(400).json({ message: "userId et teamId sont requis." });
-    }
-
-    const rightsFlags =
-      rights ??
-      RIGHTS.VALIDATE_GROUP_REQUEST |
-        RIGHTS.CREATE_REMOVE_PLAYER |
-        RIGHTS.WRITE_ENABLED;
-
-    const groupContract = await GroupContract.create({
-      User_ID: userId,
-      Team_ID: teamId,
-      Rights_flags: rightsFlags,
+    res.status(500).json({
+      error: "Erreur lors de la récupération des groupes",
+      details: error.message,
     });
-
-    res.status(201).json({
-      message: "GroupContract créé avec succès.",
-      groupContract,
-    });
-  } catch (error) {
-    console.error("Erreur lors de la création du GroupContract :", error);
-    res.status(500).json({ message: "Erreur interne du serveur." });
   }
 });
 

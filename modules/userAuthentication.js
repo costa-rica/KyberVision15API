@@ -16,7 +16,7 @@ const {
   Script,
   SyncContract,
   Team,
-} = require("kybervision14db");
+} = require("kybervision15db");
 
 async function authenticateToken(req, res, next) {
   if (process.env.AUTHENTIFICATION_TURNED_OFF === "true") {

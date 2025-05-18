@@ -1,7 +1,7 @@
 const express = require("express");
 const { authenticateToken } = require("../modules/userAuthentication");
 const router = express.Router();
-const { User, Video } = require("kybervision14db");
+const { User, Video } = require("kybervision15db");
 const {
   upload,
   deleteVideo,

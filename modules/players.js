@@ -15,7 +15,7 @@ const {
   Script,
   SyncContract,
   Team,
-} = require("kybervision14db");
+} = require("kybervision15db");
 const { Op } = require("sequelize");
 /**
  * Function to check if a player with the same firstName, lastName, and birthDate (only date, ignoring time) exists

@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
 // const { Script, Action, SyncContract } = require('../models');
-// const Script = require("kybervision14db");
-// const Action = require("kybervision14db");
-// const SyncContract = require("kybervision14db");
-// const Video = require("kybervision14db");
+// const Script = require("kybervision15db");
+// const Action = require("kybervision15db");
+// const SyncContract = require("kybervision15db");
+// const Video = require("kybervision15db");
 const {
   sequelize,
   User,
@@ -22,7 +22,7 @@ const {
   Script,
   SyncContract,
   Team,
-} = require("kybervision14db");
+} = require("kybervision15db");
 
 const { authenticateToken } = require("../modules/userAuthentication");
 const { checkBodyReturnMissing } = require("../modules/common");

@@ -1,9 +1,9 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 // const { Team, GroupContract } = require('../models');
-// const Team = require("kybervision14db");
-// const GroupContract = require("kybervision14db");
-const { League } = require("kybervision14db");
+// const Team = require("kybervision15db");
+// const GroupContract = require("kybervision15db");
+const { League } = require("kybervision15db");
 const { authenticateToken } = require("../modules/userAuthentication");
 const { checkBodyReturnMissing } = require("../modules/common");
 const router = express.Router();

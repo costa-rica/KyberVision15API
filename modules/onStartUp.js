@@ -1,4 +1,4 @@
-const { User, GroupContract } = require("kybervision14db");
+const { User, GroupContract } = require("kybervision15db");
 const bcrypt = require("bcrypt");
 const path = require("path");
 const fs = require("fs");
@@ -36,10 +36,10 @@ async function onStartUpCreateEnvUsers() {
           isAdminForKvManagerWebsite: true, // Set admin flag
         });
 
-        await GroupContract.create({
-          userId: newUser.id,
-          teamId: 1, // Assign to a default team if needed
-        });
+        // await GroupContract.create({
+        //   userId: newUser.id,
+        //   teamId: 1, // Assign to a default team if needed
+        // });
 
         console.log(`✅ Admin user created: ${email}`);
       } else {
@@ -52,11 +52,11 @@ async function onStartUpCreateEnvUsers() {
 }
 
 function createAppDirectories() {
-  if (!fs.existsSync(process.env.PATH_VIDEOS_UPLOAD03)) {
-    fs.mkdirSync(uploadPath, { recursive: true });
-  }
   if (!fs.existsSync(process.env.PATH_VIDEOS)) {
-    fs.mkdirSync(uploadPath, { recursive: true });
+    fs.mkdirSync(process.env.PATH_VIDEOS, { recursive: true });
+  }
+  if (!fs.existsSync(process.env.PATH_VIDEOS_UPLOAD03)) {
+    fs.mkdirSync(process.env.PATH_VIDEOS_UPLOAD03, { recursive: true });
   }
 }
 module.exports = { onStartUpCreateEnvUsers, createAppDirectories };
