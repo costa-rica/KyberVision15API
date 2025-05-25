@@ -203,6 +203,17 @@ router.post("/update-or-create", authenticateToken, async (req, res) => {
       where: { teamName, city, coachName },
     });
 
+    // Create practice match
+    await Match.create({
+      teamIdAnalyzed: existingTeam.id,
+      teamIdOpponent: existingTeam.id,
+      matchDate: new Date().toISOString().split("T")[0],
+      leagueId: null,
+      teamIdWinner: null,
+      groupContractId: null,
+      city: "Practice",
+    });
+
     if (existingTeam) {
       return res.status(400).json({
         error: "This team already exists",

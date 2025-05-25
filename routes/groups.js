@@ -46,7 +46,7 @@ router.post("/create/:teamId", authenticateToken, async (req, res) => {
   }
 });
 
-// GET groups/
+// GET /groups
 router.get("/", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -59,8 +59,24 @@ router.get("/", authenticateToken, async (req, res) => {
       },
     });
 
-    const teams = groupContracts.map((gc) => gc.Team);
-    res.status(200).json({ teams });
+    // const teamsArray = groupContracts.map((gc) => gc.Team);
+    const teamsArray = await Promise.all(
+      groupContracts.map(async (gc) => {
+        const team = gc.Team.toJSON(); // convert to plain object
+        const practiceMatch = await Match.findOne({
+          where: {
+            teamIdAnalyzed: team.id,
+            teamIdOpponent: team.id,
+            city: "practice",
+          },
+          order: [["matchDate", "DESC"]],
+        });
+        team.practiceMatch = practiceMatch;
+        return team;
+      })
+    );
+
+    res.status(200).json({ teamsArray });
   } catch (error) {
     res.status(500).json({
       error: "Erreur lors de la récupération des groupes",

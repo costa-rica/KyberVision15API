@@ -1,10 +1,5 @@
 const express = require("express");
 const router = express.Router();
-// const { Script, Action, SyncContract } = require('../models');
-// const Script = require("kybervision15db");
-// const Action = require("kybervision15db");
-// const SyncContract = require("kybervision15db");
-// const Video = require("kybervision15db");
 const {
   sequelize,
   User,
@@ -144,50 +139,46 @@ router.get("/script/:scriptId", authenticateToken, async (req, res) => {
 // #########################################################
 // -----  Routes created specfically for Mobile -----------
 // #########################################################
+// POST /scripts/receive-actions-array
 router.post("/receive-actions-array", authenticateToken, async (req, res) => {
   console.log("- accessed POST /scripts/receive-actions-array");
   const user = req.user;
-  const checkBodyObj = checkBodyReturnMissing(req.body, [
-    "actionsArray",
-    "matchId",
-  ]);
-  if (!checkBodyObj.isValid) {
-    return res.status(400).json({
-      result: false,
-      error: `Missing or empty fields: ${checkBodyObj.missingKeys}`,
-    });
-  }
 
-  const { actionsArray, matchId } = req.body;
+  let { actionsArray, matchId, scriptId } = req.body;
 
   try {
-    // Create a new script
-    const newScript = await Script.create({ matchId });
-
-    // Create SyncContract
-    const newSyncContract = await SyncContract.create({
-      scriptId: newScript.id,
-    });
+    if (!scriptId) {
+      // Create a new script
+      const script = await Script.create({ matchId });
+      scriptId = script.id;
+    }
 
     // Create actions
     await Promise.all(
-      actionsArray.map((elem, index) => {
+      actionsArray.map((elem) => {
         const actionObj = {
           ...elem,
           zone: 1,
-          syncContractId: newSyncContract.id,
+          scriptId,
         };
-        const newAction = Action.create({ ...actionObj });
+        return Action.upsert(actionObj); // Will insert or update based on timestamp + scriptId
       })
     );
-    console.log(`actionsArray[0]`);
-    console.log(JSON.stringify(actionsArray[0]));
-    console.log(actionsArray[0].timestamp);
-    console.log(typeof actionsArray[0].timestamp);
+    // await Promise.all(
+    //   actionsArray.map((elem, index) => {
+    //     const actionObj = {
+    //       ...elem,
+    //       zone: 1,
+    //       scriptId,
+    //     };
+    //     Action.create({ ...actionObj });
+    //   })
+    // );
 
     res.json({
       result: true,
-      message: `Actions for scriptId: ${newScript.id}, syncContractId: ${newSyncContract.id}`,
+      message: `Actions for scriptId: ${scriptId}`,
+      scriptId,
     });
   } catch (error) {
     console.error("Error in /receive-actions-array:", error);

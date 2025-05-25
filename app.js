@@ -25,7 +25,13 @@ var playerContractsRouter = require("./routes/playerContracts");
 
 var app = express();
 const cors = require("cors");
-app.use(cors());
+// cors options send content-type application/json
+app.use(
+  cors({
+    credentials: true,
+    exposedHeaders: ["Content-Disposition"], // <-- this line is key
+  })
+);
 
 app.use(logger("dev"));
 app.use(express.json());
@@ -52,7 +58,11 @@ app.use("/player-contracts", playerContractsRouter);
 app.use(express.json({ limit: "6gb" }));
 app.use(express.urlencoded({ limit: "6gb", extended: true }));
 
-const { onStartUpCreateEnvUsers } = require("./modules/onStartUp");
+const {
+  onStartUpCreateEnvUsers,
+  onStartUpCreateTeamAndMatch,
+  onStartUpCreatePracticeMatch,
+} = require("./modules/onStartUp");
 
 // Sync database and then create environment users
 sequelize
@@ -60,6 +70,8 @@ sequelize
   .then(async () => {
     console.log("✅ Database connected & synced");
     await onStartUpCreateEnvUsers(); // <-- Call function here
+    // await onStartUpCreateTeamAndMatch();
+    await onStartUpCreatePracticeMatch();
   })
   .catch((error) => console.error("❌ Error syncing database:", error));
 

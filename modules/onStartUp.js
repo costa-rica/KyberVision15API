@@ -1,4 +1,4 @@
-const { User, GroupContract } = require("kybervision15db");
+const { User, Team, Match, League } = require("kybervision15db");
 const bcrypt = require("bcrypt");
 const path = require("path");
 const fs = require("fs");
@@ -43,7 +43,7 @@ async function onStartUpCreateEnvUsers() {
 
         console.log(`✅ Admin user created: ${email}`);
       } else {
-        console.log(`🔸 User already exists: ${email}`);
+        console.log(`ℹ️  User already exists: ${email}`);
       }
     } catch (err) {
       console.error(`❌ Error creating admin user (${email}):`, err);
@@ -59,4 +59,115 @@ function createAppDirectories() {
     fs.mkdirSync(process.env.PATH_VIDEOS_UPLOAD03, { recursive: true });
   }
 }
-module.exports = { onStartUpCreateEnvUsers, createAppDirectories };
+
+async function onStartUpCreateTeamAndMatch() {
+  try {
+    const existingAnalyzedTeam = await Team.findOne({
+      where: { teamName: "dummyAnalyzed" },
+    });
+
+    if (existingAnalyzedTeam) {
+      console.log(
+        "ℹ️  Dummy teams and match already initialized. Skipping setup."
+      );
+      return;
+    }
+
+    const [league, leagueCreated] = await League.findOrCreate({
+      where: { name: "dummyLeague" },
+      defaults: {
+        category: "StartupCategory",
+      },
+    });
+
+    const [teamAnalyzed] = await Team.findOrCreate({
+      where: { teamName: "dummyAnalyzed" },
+      defaults: {
+        city: "TestCityA",
+        coachName: "Coach A",
+      },
+    });
+
+    const [teamOpponent] = await Team.findOrCreate({
+      where: { teamName: "dummyOpponent" },
+      defaults: {
+        city: "TestCityB",
+        coachName: "Coach B",
+      },
+    });
+
+    await Match.findOrCreate({
+      where: {
+        teamIdAnalyzed: teamAnalyzed.id,
+        teamIdOpponent: teamOpponent.id,
+        matchDate: new Date().toISOString().split("T")[0],
+      },
+      defaults: {
+        leagueId: league.id,
+        teamIdWinner: null,
+        groupContractId: null,
+        city: "Startupville",
+      },
+    });
+
+    console.log("✅ Dummy league, teams, and match created.");
+  } catch (err) {
+    console.error("❌ Error during dummy data setup:", err);
+  }
+}
+
+async function onStartUpCreatePracticeMatch() {
+  let practiceLeague = await League.findOne({
+    where: { name: "practice" },
+  });
+
+  if (!practiceLeague) {
+    practiceLeague = await League.create({
+      name: "practice",
+      category: "practice",
+    });
+  }
+
+  let practiceMatchCount = 0;
+  try {
+    const allTeams = await Team.findAll();
+
+    for (const currentTeam of allTeams) {
+      const existingPracticeMatch = await Match.findOne({
+        where: {
+          teamIdAnalyzed: currentTeam.id,
+          teamIdOpponent: currentTeam.id,
+          city: "practice",
+        },
+      });
+
+      if (!existingPracticeMatch) {
+        await Match.create({
+          teamIdAnalyzed: currentTeam.id,
+          teamIdOpponent: currentTeam.id,
+          matchDate: new Date().toISOString().split("T")[0],
+          leagueId: practiceLeague.id,
+          teamIdWinner: null,
+          groupContractId: null,
+          city: "practice",
+        });
+        console.log(
+          `✅ Practice match created for team: ${currentTeam.teamName}`
+        );
+        practiceMatchCount++;
+      }
+    }
+    if (practiceMatchCount === 0) {
+      console.log(`ℹ️  All teams have practice matches.`);
+    }
+  } catch (err) {
+    console.error("❌ Error creating practice matches:", err);
+  }
+}
+
+module.exports = {
+  onStartUpCreateEnvUsers,
+  createAppDirectories,
+  onStartUpCreateTeamAndMatch,
+  onStartUpCreatePracticeMatch,
+};
