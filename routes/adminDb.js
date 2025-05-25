@@ -88,7 +88,7 @@ router.get("/table/:tableName", authenticateToken, async (req, res) => {
 
     // Fetch all records from the table
     const tableData = (await models[tableName].findAll()) || [];
-    // console.log(`Fetched data from ${tableName}:`, tableData);
+    console.log(`Fetched data from ${tableName}:`, tableData);
 
     res.json({ result: true, data: tableData });
   } catch (error) {
@@ -429,6 +429,34 @@ router.delete("/table/:tableName", authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error("Error deleting table:", error);
+    res.status(500).json({
+      result: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+});
+
+// 🔹 GET /admin-db/table-clean/:tableName : route to clean a specific table
+router.get("/table-clean/:tableName", authenticateToken, async (req, res) => {
+  try {
+    const { tableName } = req.params;
+    console.log(`- in GET /admin-db/table-clean/${tableName}`);
+
+    // Check if the requested table exists in the models
+    if (!models[tableName]) {
+      return res
+        .status(400)
+        .json({ result: false, message: `Table '${tableName}' not found.` });
+    }
+
+    // Fetch all records from the table
+    const tableData = (await models[tableName].findAll({ raw: true })) || [];
+    // console.log(`----Fetched data from ${tableName} ----`);
+    // console.log(tableData);
+    res.json({ result: true, data: tableData });
+  } catch (error) {
+    console.error("Error fetching table data:", error);
     res.status(500).json({
       result: false,
       message: "Internal server error",

@@ -258,7 +258,7 @@ router.post("/update-or-create", authenticateToken, async (req, res) => {
   }
 });
 
-// 🔹 Get all actions for a match (GET /matches/:matchId/actions)
+// 🔹 GET /matches/:matchId/actions : Get all actions for a match
 router.get("/:matchId/actions", authenticateToken, async (req, res) => {
   console.log(`- in GET /matches/${req.params.matchId}/actions`);
 
