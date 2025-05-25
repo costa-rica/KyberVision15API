@@ -1,20 +1,5 @@
 var express = require("express");
 var router = express.Router();
-// const User = require("kybervision15db");
-// const Video = require("kybervision15db");
-// const Action = require("kybervision15db");
-// const CompetitionContract = require("kybervision15db");
-// const Complex = require("kybervision15db");
-// const GroupContract = require("kybervision15db");
-// const League = require("kybervision15db");
-// const Match = require("kybervision15db");
-// const OpponentServeTimestamp = require("kybervision15db");
-// const Player = require("kybervision15db");
-// const PlayerContract = require("kybervision15db");
-// const Point = require("kybervision15db");
-// const Script = require("kybervision15db");
-// const SyncContract = require("kybervision15db");
-// const Team = require("kybervision15db");
 const {
   sequelize,
   User,
@@ -88,7 +73,7 @@ router.get("/table/:tableName", authenticateToken, async (req, res) => {
 
     // Fetch all records from the table
     const tableData = (await models[tableName].findAll()) || [];
-    console.log(`Fetched data from ${tableName}:`, tableData);
+    // console.log(`Fetched data from ${tableName}:`, tableData);
 
     res.json({ result: true, data: tableData });
   } catch (error) {
