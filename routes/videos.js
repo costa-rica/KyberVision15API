@@ -135,7 +135,7 @@ router.get("/", authenticateToken, async (req, res) => {
       })
     );
 
-    res.json({ result: true, videos: formattedVideos });
+    res.json({ result: true, videosArray: formattedVideos });
   } catch (error) {
     console.error("Error fetching videos:", error);
     res.status(500).json({

@@ -279,12 +279,15 @@ router.get("/:matchId/actions", authenticateToken, async (req, res) => {
 
     // Extract script IDs
     const scriptIds = scripts.map((script) => script.id);
+    console.log(`scriptIds: ${scriptIds}`);
 
     // 🔹 Find all SyncContracts associated with these Scripts
     const syncContracts = await SyncContract.findAll({
       where: { scriptId: scriptIds },
       attributes: ["id", "scriptId", "deltaTime"], // Need deltaTime per SyncContract
     });
+
+    console.log(`syncContracts: ${JSON.stringify(syncContracts)}`);
 
     if (syncContracts.length === 0) {
       return res.status(404).json({
@@ -298,19 +301,23 @@ router.get("/:matchId/actions", authenticateToken, async (req, res) => {
     // Create a mapping of syncContractId → deltaTime
     const deltaTimeMap = {};
     syncContracts.forEach((sc) => {
-      deltaTimeMap[sc.id] = sc.deltaTime || 0.0; // Default 0.0 if undefined
+      // deltaTimeMap[sc.id] = sc.deltaTime || 0.0; // Default 0.0 if undefined
+      deltaTimeMap[sc.scriptId] = sc.deltaTime || 0.0; // Default 0.0 if undefined
     });
 
-    // console.log(`📊 DeltaTime mapping:`, deltaTimeMap);
+    console.log(`📊 DeltaTime mapping:`, deltaTimeMap);
 
-    // Extract syncContract IDs
-    const syncContractIds = syncContracts.map((sc) => sc.id);
+    // // Extract syncContract IDs
+    // const syncContractIds = syncContracts.map((sc) => sc.id);
 
     // 🔹 Find all Actions linked to these SyncContracts
     const actions = await Action.findAll({
-      where: { syncContractId: syncContractIds },
+      // where: { syncContractId: syncContractIds },
+      where: { scriptId: scriptIds },
       order: [["timestamp", "ASC"]],
     });
+
+    console.log(`actions: ${JSON.stringify(actions)}`);
 
     if (actions.length === 0) {
       return res.json({ result: true, actions: [] });
@@ -320,7 +327,8 @@ router.get("/:matchId/actions", authenticateToken, async (req, res) => {
 
     // Compute estimated start of video timestamp per action’s SyncContract deltaTime
     const updatedActions = actions.map((action, index) => {
-      const actionDeltaTime = deltaTimeMap[action.syncContractId] || 0.0; // Get deltaTime per action’s SyncContract
+      // const actionDeltaTime = deltaTimeMap[action.syncContractId] || 0.0; // Get deltaTime per action’s SyncContract
+      const actionDeltaTime = deltaTimeMap[action.scriptId] || 0.0; // Get deltaTime per action’s SyncContract
       const estimatedStartOfVideo = createEstimatedTimestampStartOfVideo(
         actions,
         actionDeltaTime
@@ -344,6 +352,8 @@ router.get("/:matchId/actions", authenticateToken, async (req, res) => {
     const uniqueListOfPlayerObjArray = await createUniquePlayerObjArray(
       updatedActions
     );
+
+    // console.log(`uniqueListOfPlayerNamesArray: ${JSON.stringify(uniqueListOfPlayerNamesArray)}`);
 
     res.json({
       result: true,
