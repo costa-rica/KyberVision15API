@@ -450,4 +450,38 @@ router.get("/table-clean/:tableName", authenticateToken, async (req, res) => {
   }
 });
 
+// DELETE /table-row/:tableName/:rowId : route to delete a specific row from a table
+router.delete(
+  "/table-row/:tableName/:rowId",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const { tableName, rowId } = req.params;
+      console.log(`- in DELETE /admin-db/table-row/${tableName}/${rowId}`);
+
+      // Check if the requested table exists in the models
+      if (!models[tableName]) {
+        return res
+          .status(400)
+          .json({ result: false, message: `Table '${tableName}' not found.` });
+      }
+
+      // Delete the specific row from the table
+      await models[tableName].destroy({ where: { id: rowId } });
+
+      res.json({
+        result: true,
+        message: `Row ${rowId} from table '${tableName}' has been deleted.`,
+      });
+    } catch (error) {
+      console.error("Error deleting row:", error);
+      res.status(500).json({
+        result: false,
+        message: "Internal server error",
+        error: error.message,
+      });
+    }
+  }
+);
+
 module.exports = router;
