@@ -17,6 +17,37 @@ const {
   Team,
 } = require("kybervision15db");
 
+async function createMatchWithFreeAgentLeague(teamId) {
+  try {
+    const freeAgentLeague = await League.findOne({
+      where: { name: "Free Agent League" },
+    });
+
+    if (!freeAgentLeague) {
+      console.log("ℹ️  Free Agent league not found. Skipping setup.");
+      return;
+    }
+    const competitionContract = await CompetitionContract.create({
+      leagueId: freeAgentLeague.id,
+      teamId: teamId,
+    });
+
+    const match = await Match.create({
+      leagueId: freeAgentLeague.id,
+      teamIdAnalyzed: teamId,
+      teamIdOpponent: teamId,
+      teamIdWinner: teamId,
+      competitionContractId: competitionContract.id,
+      city: "Practice",
+      matchDate: new Date().toISOString().split("T")[0],
+    });
+
+    console.log(`✅ Match created with Free Agent league.`);
+  } catch (err) {
+    console.error(`❌ Error creating match with Free Agent league:`, err);
+  }
+}
+
 const createMatch = async (matchData) => {
   try {
     const match = await Match.create(matchData);
@@ -98,6 +129,7 @@ const getMatchWithTeams = async (matchId) => {
 };
 
 module.exports = {
+  createMatchWithFreeAgentLeague,
   createMatch,
   deleteMatch,
   getMatchWithTeams,

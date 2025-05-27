@@ -60,8 +60,8 @@ app.use(express.urlencoded({ limit: "6gb", extended: true }));
 
 const {
   onStartUpCreateEnvUsers,
-  onStartUpCreateTeamAndMatch,
-  onStartUpCreatePracticeMatch,
+  onStartUpCreateFreeAgentLeagueAndTeam,
+  onStartUpCreatePracticeMatchForEachTeam,
 } = require("./modules/onStartUp");
 
 // Sync database and then create environment users
@@ -69,9 +69,9 @@ sequelize
   .sync()
   .then(async () => {
     console.log("✅ Database connected & synced");
+    await onStartUpCreateFreeAgentLeagueAndTeam();
     await onStartUpCreateEnvUsers(); // <-- Call function here
-    // await onStartUpCreateTeamAndMatch();
-    await onStartUpCreatePracticeMatch();
+    await onStartUpCreatePracticeMatchForEachTeam();
   })
   .catch((error) => console.error("❌ Error syncing database:", error));
 

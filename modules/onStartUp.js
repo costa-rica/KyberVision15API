@@ -2,6 +2,45 @@ const { User, Team, Match, League } = require("kybervision15db");
 const bcrypt = require("bcrypt");
 const path = require("path");
 const fs = require("fs");
+const { createNewTeam } = require("./teams");
+const { addUserToFreeAgentTeam } = require("./users");
+const { createMatchWithFreeAgentLeague } = require("./match");
+
+function createAppDirectories() {
+  if (!fs.existsSync(process.env.PATH_VIDEOS)) {
+    fs.mkdirSync(process.env.PATH_VIDEOS, { recursive: true });
+  }
+  if (!fs.existsSync(process.env.PATH_VIDEOS_UPLOAD03)) {
+    fs.mkdirSync(process.env.PATH_VIDEOS_UPLOAD03, { recursive: true });
+  }
+}
+
+async function onStartUpCreateFreeAgentLeagueAndTeam() {
+  try {
+    const existingFreeAgentTeam = await Team.findOne({
+      where: { teamName: "Free Agent Team" },
+    });
+
+    if (existingFreeAgentTeam) {
+      console.log("ℹ️  Free Agent team already initialized. Skipping setup.");
+      return;
+    }
+
+    await League.create({
+      name: "Free Agent League",
+      category: "Free Agents",
+    });
+
+    await createNewTeam(
+      "Free Agent Team",
+      "Free Agent City",
+      "Free Agent Coach"
+    );
+    console.log("✅ Free Agent league, team created.");
+  } catch (err) {
+    console.error("❌ Error during dummy data setup:", err);
+  }
+}
 
 async function onStartUpCreateEnvUsers() {
   if (!process.env.ADMIN_EMAIL_KV_MANAGER_WEBSITE) {
@@ -36,10 +75,7 @@ async function onStartUpCreateEnvUsers() {
           isAdminForKvManagerWebsite: true, // Set admin flag
         });
 
-        // await GroupContract.create({
-        //   userId: newUser.id,
-        //   teamId: 1, // Assign to a default team if needed
-        // });
+        await addUserToFreeAgentTeam(newUser.id);
 
         console.log(`✅ Admin user created: ${email}`);
       } else {
@@ -51,80 +87,15 @@ async function onStartUpCreateEnvUsers() {
   }
 }
 
-function createAppDirectories() {
-  if (!fs.existsSync(process.env.PATH_VIDEOS)) {
-    fs.mkdirSync(process.env.PATH_VIDEOS, { recursive: true });
-  }
-  if (!fs.existsSync(process.env.PATH_VIDEOS_UPLOAD03)) {
-    fs.mkdirSync(process.env.PATH_VIDEOS_UPLOAD03, { recursive: true });
-  }
-}
-
-async function onStartUpCreateTeamAndMatch() {
-  try {
-    const existingAnalyzedTeam = await Team.findOne({
-      where: { teamName: "dummyAnalyzed" },
-    });
-
-    if (existingAnalyzedTeam) {
-      console.log(
-        "ℹ️  Dummy teams and match already initialized. Skipping setup."
-      );
-      return;
-    }
-
-    const [league, leagueCreated] = await League.findOrCreate({
-      where: { name: "dummyLeague" },
-      defaults: {
-        category: "StartupCategory",
-      },
-    });
-
-    const [teamAnalyzed] = await Team.findOrCreate({
-      where: { teamName: "dummyAnalyzed" },
-      defaults: {
-        city: "TestCityA",
-        coachName: "Coach A",
-      },
-    });
-
-    const [teamOpponent] = await Team.findOrCreate({
-      where: { teamName: "dummyOpponent" },
-      defaults: {
-        city: "TestCityB",
-        coachName: "Coach B",
-      },
-    });
-
-    await Match.findOrCreate({
-      where: {
-        teamIdAnalyzed: teamAnalyzed.id,
-        teamIdOpponent: teamOpponent.id,
-        matchDate: new Date().toISOString().split("T")[0],
-      },
-      defaults: {
-        leagueId: league.id,
-        teamIdWinner: null,
-        groupContractId: null,
-        city: "Startupville",
-      },
-    });
-
-    console.log("✅ Dummy league, teams, and match created.");
-  } catch (err) {
-    console.error("❌ Error during dummy data setup:", err);
-  }
-}
-
-async function onStartUpCreatePracticeMatch() {
+async function onStartUpCreatePracticeMatchForEachTeam() {
   let practiceLeague = await League.findOne({
-    where: { name: "practice" },
+    where: { name: "Free Agent League" },
   });
 
   if (!practiceLeague) {
     practiceLeague = await League.create({
-      name: "practice",
-      category: "practice",
+      name: "Free Agent League",
+      category: "Free Agents",
     });
   }
 
@@ -137,20 +108,21 @@ async function onStartUpCreatePracticeMatch() {
         where: {
           teamIdAnalyzed: currentTeam.id,
           teamIdOpponent: currentTeam.id,
-          city: "practice",
+          city: "Practice",
         },
       });
 
       if (!existingPracticeMatch) {
-        await Match.create({
-          teamIdAnalyzed: currentTeam.id,
-          teamIdOpponent: currentTeam.id,
-          matchDate: new Date().toISOString().split("T")[0],
-          leagueId: practiceLeague.id,
-          teamIdWinner: null,
-          groupContractId: null,
-          city: "practice",
-        });
+        await createMatchWithFreeAgentLeague(currentTeam.id);
+        // await Match.create({
+        //   teamIdAnalyzed: currentTeam.id,
+        //   teamIdOpponent: currentTeam.id,
+        //   matchDate: new Date().toISOString().split("T")[0],
+        //   leagueId: practiceLeague.id,
+        //   teamIdWinner: null,
+        //   competitionContractId: null,
+        //   city: "practice",
+        // });
         console.log(
           `✅ Practice match created for team: ${currentTeam.teamName}`
         );
@@ -168,6 +140,6 @@ async function onStartUpCreatePracticeMatch() {
 module.exports = {
   onStartUpCreateEnvUsers,
   createAppDirectories,
-  onStartUpCreateTeamAndMatch,
-  onStartUpCreatePracticeMatch,
+  onStartUpCreateFreeAgentLeagueAndTeam,
+  onStartUpCreatePracticeMatchForEachTeam,
 };
