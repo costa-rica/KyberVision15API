@@ -54,27 +54,42 @@ async function updateSyncContractsWithVideoId(videoId, matchId) {
 
   let syncContractUpdates = 0;
 
-  // Step 5: Loop through all scripts and update SyncContracts
-  for (const script of scripts) {
-    const syncContracts = await SyncContract.findAll({
-      where: { scriptId: script.id },
-    });
-
-    if (syncContracts.length > 0) {
-      console.log(
-        `🔄 Updating ${syncContracts.length} SyncContract(s) for scriptId: ${script.id}`
-      );
-
-      for (const syncContract of syncContracts) {
-        await syncContract.update({ videoId });
-        syncContractUpdates++;
-      }
-    } else {
-      console.log(`⚠️ No SyncContracts found for scriptId: ${script.id}`);
-    }
-  }
+  // For each script create a new row in syncContracts
+  Promise.all(
+    scripts.map(async (script) => {
+      const syncContract = await SyncContract.create({
+        scriptId: script.id,
+        videoId,
+        // deltaTime: 0.0,
+      });
+      syncContractUpdates++;
+    })
+  );
 
   return syncContractUpdates;
+
+  // ---- OBE ---
+  // // Step 5: Loop through all scripts and update SyncContracts
+  // for (const script of scripts) {
+  //   const syncContracts = await SyncContract.findAll({
+  //     where: { scriptId: script.id },
+  //   });
+
+  //   if (syncContracts.length > 0) {
+  //     console.log(
+  //       `🔄 Updating ${syncContracts.length} SyncContract(s) for scriptId: ${script.id}`
+  //     );
+
+  //     for (const syncContract of syncContracts) {
+  //       await syncContract.update({ videoId });
+  //       syncContractUpdates++;
+  //     }
+  //   } else {
+  //     console.log(`⚠️ No SyncContracts found for scriptId: ${script.id}`);
+  //   }
+  // }
+
+  // return syncContractUpdates;
 }
 
 module.exports = {

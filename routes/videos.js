@@ -230,216 +230,9 @@ router.post("/update/:videoId", authenticateToken, async (req, res) => {
   res.json({ result: true, message: "Video updated successfully" });
 });
 
-// 🔹 (from 2025-03-10 effort) Stream Video by ID (GET /videos/stream/:videoId)
-router.get("/stream/:videoId", async (req, res) => {
-  const videoId = req.params.videoId;
-  const videoObj = await Video.findByPk(videoId);
-  if (!videoObj) {
-    return res.status(404).json({ result: false, message: "Video not found" });
-  }
-
-  const videoPath = path.join(process.env.PATH_VIDEOS, videoObj.filename);
-  console.log(`Streaming video: ${videoPath}`);
-
-  const stat = fs.statSync(videoPath);
-  const fileSize = stat.size;
-  const range = req.headers.range;
-
-  if (range) {
-    const parts = range.replace(/bytes=/, "").split("-");
-    const start = parseInt(parts[0], 10);
-    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-    const chunkSize = end - start + 1;
-
-    console.log(`📡 Sending chunk: ${start}-${end} (${chunkSize} bytes)`);
-
-    const file = fs.createReadStream(videoPath, { start, end });
-    const head = {
-      "Content-Range": `bytes ${start}-${end}/${fileSize}`,
-      "Accept-Ranges": "bytes",
-      "Content-Length": chunkSize,
-      "Content-Type": "video/mp4",
-    };
-
-    res.writeHead(206, head);
-    file.pipe(res);
-
-    // // Monitor data being sent
-    // let bytesSent = 0;
-    // file.on("data", (chunk) => {
-    //   bytesSent += chunk.length;
-    //   console.log(
-    //     `✅ Chunk sent: ${chunk.length} bytes (Total: ${bytesSent} bytes)`
-    //   );
-    // });
-
-    // file.on("end", () => console.log("🚀 Video streaming finished!"));
-  } else {
-    console.log("⚠️ No range request - sending full video.");
-
-    res.writeHead(200, {
-      "Content-Length": fileSize,
-      "Content-Type": "video/mp4",
-    });
-
-    const file = fs.createReadStream(videoPath);
-    file.pipe(res);
-
-    // let bytesSent = 0;
-    // file.on("data", (chunk) => {
-    //   bytesSent += chunk.length;
-    //   console.log(
-    //     `✅ Chunk sent: ${chunk.length} bytes (Total: ${bytesSent} bytes)`
-    //   );
-    // });
-
-    // file.on("end", () => console.log("🚀 Full video sent!"));
-  }
-});
-
-// 🔹 (from 2025-03-29) Stream Video by ID (GET /videos/stream-only/:videoId)
-router.get("/stream-only/:videoId", authenticateToken, async (req, res) => {
-  console.log(`- in GET /stream-only/${req.params.videoId}`);
-  const videoId = req.params.videoId;
-  const videoObj = await Video.findByPk(videoId);
-
-  if (!videoObj) {
-    return res.status(404).json({ result: false, message: "Video not found" });
-  }
-
-  // const videoPath = path.join(process.env.PATH_VIDEOS, videoObj.filename);
-  console.log(`videoObj.pathToVideoFile: ${videoObj.pathToVideoFile}`);
-  const videoPath = path.join(videoObj.pathToVideoFile, videoObj.filename);
-
-  console.log(`Streaming video: ${videoPath}`);
-
-  const stat = fs.statSync(videoPath);
-  const fileSize = stat.size;
-  const range = req.headers.range;
-
-  if (!range) {
-    console.log("❌ No range request - refusing full response.");
-    return res.status(416).send("Range header required for streaming");
-  }
-
-  // Parse range header
-  const parts = range.replace(/bytes=/, "").split("-");
-  const start = parseInt(parts[0], 10);
-  const end = parts[1]
-    ? parseInt(parts[1], 10)
-    : Math.min(start + 8388608 - 1, fileSize - 1); // Limit chunk size to 8 MB
-  const chunkSize = end - start + 1;
-
-  console.log(
-    `📡 Preparing to send chunk: ${start}-${end} (${chunkSize} bytes)`
-  );
-
-  const file = fs.createReadStream(videoPath, {
-    start,
-    end,
-    highWaterMark: 8388608, // 8 MB internal chunk size
-  });
-
-  const head = {
-    "Content-Range": `bytes ${start}-${end}/${fileSize}`,
-    "Accept-Ranges": "bytes",
-    "Content-Length": chunkSize,
-    "Content-Type": "video/mp4",
-  };
-
-  res.writeHead(206, head);
-
-  file.pipe(res);
-});
-
-const axios = require("axios");
-// 🔹 Test Stream Proxy (GET /videos/test-stream/BigBuckBunny.mp4)
-router.get("/test-stream/BigBuckBunny.mp4", async (req, res) => {
-  console.log(`- in GET /test-stream/BigBuckBunny.mp4`);
-
-  const targetUrl =
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"; // Replace with your URL if needed
-  const range = req.headers.range;
-
-  if (!range) {
-    console.log("❌ No range request - refusing full response.");
-    return res.status(416).send("Range header required for streaming");
-  }
-
-  try {
-    const response = await axios.get(targetUrl, {
-      headers: { Range: range },
-      responseType: "stream",
-    });
-
-    console.log(`📡 Proxying chunk with status: ${response.status}`);
-
-    // Pass headers from the upstream response to the client
-    res.writeHead(response.status, response.headers);
-
-    // Pipe the upstream stream to the client
-    response.data.pipe(res);
-  } catch (error) {
-    console.error("❌ Error proxying the stream:", error.message);
-    res.status(500).send("Failed to proxy the video stream.");
-  }
-});
-
-// // 🔹 (from 2025-03-10 effort) Stream Video by ID (GET /videos/stream-only/:videoId)
-// router.get("/stream-only/:videoId", async (req, res) => {
-//   console.log(`- in GET /stream-only/${req.params.videoId}`);
-//   const videoId = req.params.videoId;
-//   const videoObj = await Video.findByPk(videoId);
-
-//   if (!videoObj) {
-//     return res.status(404).json({ result: false, message: "Video not found" });
-//   }
-
-//   const videoPath = path.join(process.env.PATH_VIDEOS, videoObj.filename);
-//   console.log(`Streaming video: ${videoPath}`);
-
-//   const stat = fs.statSync(videoPath);
-//   const fileSize = stat.size;
-//   const range = req.headers.range;
-
-//   if (!range) {
-//     console.log("❌ No range request - refusing full response.");
-//     return res.status(416).send("Range header required for streaming");
-//   }
-
-//   console.log(`range: ${range}`);
-
-//   // Parse range header
-//   const parts = range.replace(/bytes=/, "").split("-");
-//   const start = parseInt(parts[0], 10);
-//   const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-//   const chunkSize = end - start + 1;
-
-//   console.log(`📡 Sending chunk: ${start}-${end} (${chunkSize} bytes)`);
-
-//   const file = fs.createReadStream(videoPath, { start, end });
-
-//   const head = {
-//     "Content-Range": `bytes ${start}-${end}/${fileSize}`,
-//     "Accept-Ranges": "bytes",
-//     "Content-Length": chunkSize,
-//     "Content-Type": "video/mp4",
-//   };
-
-//   res.writeHead(206, head);
-//   file.pipe(res);
-
-//   // Monitor data being sent
-//   let bytesSent = 0;
-//   file.on("data", (chunk) => {
-//     bytesSent += chunk.length;
-//     console.log(
-//       `✅ Chunk sent: ${chunk.length} bytes (Total: ${bytesSent} bytes)`
-//     );
-//   });
-
-//   file.on("end", () => console.log("🚀 Streaming finished!"));
-// });
+// -------------------------
+// 🔹 Montage Video
+// -------------------------
 
 // 🔹 Create a video montage from selected actions (POST /videos/montage/:videoId)
 router.post("/montage/:videoId", authenticateToken, async (req, res) => {
@@ -775,14 +568,50 @@ router.post(
       matchId
     );
 
+    const videoId = newVideo.id;
     // Step 6: spawn KyberVision14YouTuber child process
-    const jobQueuerResponse =
-      await requestJobQueuerVideoUploaderYouTubeProcessing(
-        renamedFilename,
-        newVideo.id
-      );
+    await requestJobQueuerVideoUploaderYouTubeProcessing(
+      renamedFilename,
+      videoId
+    );
     return res.json({ result: true });
   }
 );
+
+// router.post("/test-queuer-add-job", authenticateToken, async (req, res) => {
+//   console.log("- in POST /videos/test-queuer-add-job");
+
+//   try {
+//     const response = await fetch("http://localhost:8003/test-jobs/add", {
+//       method: "POST",
+//     });
+
+//     if (!response.ok) {
+//       const text = await response.text();
+//       console.error("❌ Failed to queue job:", text);
+//       return res
+//         .status(500)
+//         .json({ result: false, message: "Failed to queue test job" });
+//     }
+
+//     const data = await response.json();
+//     console.log("✅ Queuer response:", data);
+
+//     res.json({
+//       result: true,
+//       message: "Job successfully queued",
+//       queuerResponse: data,
+//     });
+//   } catch (error) {
+//     console.error("❌ Error calling test job endpoint:", error);
+//     res
+//       .status(500)
+//       .json({
+//         result: false,
+//         message: "Internal error triggering test job",
+//         error: error.message,
+//       });
+//   }
+// });
 
 module.exports = router;

@@ -403,28 +403,56 @@ const requestJobQueuerVideoUploaderProcessing = async (filename, videoId) => {
   }
 };
 
-const requestJobQueuerVideoUploaderYouTubeProcessing = async (
+async function requestJobQueuerVideoUploaderYouTubeProcessing(
   filename,
   videoId
-) => {
-  const url = `${process.env.URL_KV_JOB_QUEUER}/youtube-video-uploader/add-video`;
-  console.log(
-    `[in modules/reqeuest...] sending request to ${url} for ${filename}`
-  );
+) {
   try {
-    const response = await axios.post(url, { filename, videoId });
-    console.log(`📡 Response from JobQueuer03: ${response.data}`);
+    const response = await fetch("http://localhost:8003/youtube-uploader/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        filename,
+        videoId,
+        queueName: "KyberVision15YouTubeUploader",
+      }),
+    });
 
-    return { success: true, data: response.data };
-  } catch (error) {
-    console.error(
-      `❌ Failed to request JobQueuer03 for processing: ${filename}`
-    );
-    console.error(`📝 Error: ${error.message}`);
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`❌ Failed to queue YouTube upload job: ${text}`);
+    }
 
-    return { success: false, error: error.message };
+    const result = await response.json();
+    console.log("✅ Queuer YouTube response:", result);
+    return result;
+  } catch (err) {
+    console.error("❌ Error contacting YouTube Queuer:", err.message);
+    throw err;
   }
-};
+}
+// async function requestJobQueuerVideoUploaderYouTubeProcessing(
+//   filename,
+//   videoId
+// ) {
+//   const url = `${process.env.URL_KV_JOB_QUEUER}/youtube-video-uploader/add-video`;
+//   console.log(
+//     `[in modules/reqeuest...] sending request to ${url} for ${filename}`
+//   );
+//   try {
+//     const response = await axios.post(url, { filename, videoId });
+//     console.log(`📡 Response from KyberVision15Queuer: ${response.data}`);
+
+//     return { success: true, data: response.data };
+//   } catch (error) {
+//     console.error(
+//       `❌ Failed to request KyberVision15Queuer for processing: ${filename}`
+//     );
+//     console.error(`📝 Error: ${error.message}`);
+
+//     return { success: false, error: error.message };
+//   }
+// }
 module.exports = {
   upload,
   deleteVideo,
