@@ -69,9 +69,19 @@ const restrictEmails = (email) => {
   return acceptedEmails.includes(email);
 };
 
+function tokenizeObject(object) {
+  return jwt.sign(object, process.env.JWT_SECRET);
+}
+
+function detokenizeObject(token) {
+  return jwt.verify(token, process.env.JWT_SECRET);
+}
+
 module.exports = {
   // createToken,
   authenticateToken,
   findUserByEmail,
   restrictEmails,
+  tokenizeObject,
+  detokenizeObject,
 };

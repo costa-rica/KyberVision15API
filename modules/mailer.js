@@ -84,13 +84,15 @@ const sendVideoMontageCompleteNotificationEmail = async (
 
     let montageUrlPlay;
     let montageUrlDownload;
-    if (process.env.NODE_ENV === "workstation") {
-      montageUrlPlay = `http://localhost:3000/videos/montage-service/play-video/${tokenizedFilename}`;
-      montageUrlDownload = `http://localhost:3000/videos/montage-service/download-video/${tokenizedFilename}`;
-    } else {
-      montageUrlPlay = `https://api.kv11.dashanddata.com/videos/montage-service/play-video/${tokenizedFilename}`;
-      montageUrlDownload = `https://api.kv11.dashanddata.com/videos/montage-service/download-video/${tokenizedFilename}`;
-    }
+    // if (process.env.NODE_ENV === "workstation") {
+    //   montageUrlPlay = `http://localhost:3000/videos/montage-service/play-video/${tokenizedFilename}`;
+    //   montageUrlDownload = `http://localhost:3000/videos/montage-service/download-video/${tokenizedFilename}`;
+    // } else {
+    //   montageUrlPlay = `https://api.kv15.dashanddata.com/videos/montage-service/play-video/${tokenizedFilename}`;
+    //   montageUrlDownload = `https://api.kv15.dashanddata.com/videos/montage-service/download-video/${tokenizedFilename}`;
+    // }
+    montageUrlPlay = `${process.env.URL_BASE_KV_API}/videos/montage-service/play-video/${tokenizedFilename}`;
+    montageUrlDownload = `${process.env.URL_BASE_KV_API}/videos/montage-service/download-video/${tokenizedFilename}`;
 
     // Replace the placeholder {{montageUrlPlay}} and {{montageUrlDownload}} with the actual link
     // emailTemplate = emailTemplate.replace("{{montageLink}}", link);

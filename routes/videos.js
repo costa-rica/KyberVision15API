@@ -1,5 +1,9 @@
 const express = require("express");
-const { authenticateToken } = require("../modules/userAuthentication");
+const {
+  authenticateToken,
+  tokenizeObject,
+  detokenizeObject,
+} = require("../modules/userAuthentication");
 const router = express.Router();
 const { User, Video } = require("kybervision15db");
 const {
@@ -374,15 +378,14 @@ router.post(
     console.log(`userId: ${userId}`);
 
     // 🔹 Send email notification
-    const tokenizedFilename = jwt.sign({ filename }, process.env.JWT_SECRET);
-    // let montageUrl;
-    // if (process.env.NODE_ENV === "workstation") {
-    //   montageUrl = `http://${req.get(
-    //     "host"
-    //   )}/videos/montage-service/finished-video/${tokenizedFilename}`;
-    // } else {
-    //   montageUrl = `https://api.kv11.dashanddata.com/videos/montage-service/finished-video/${tokenizedFilename}`;
-    // }
+    // const tokenizedFilename = jwt.sign({ filename }, process.env.JWT_SECRET);
+    const tokenizedFilename = tokenizeObject({ filename });
+
+    console.log("------ Check Token from notify-user -----");
+    console.log(tokenizedFilename);
+    console.log(`filename tokenized: ${detokenizeObject(tokenizedFilename)}`);
+    console.log("------ ENDCheck Token from notify-user -----");
+
     await sendVideoMontageCompleteNotificationEmail(
       user.email,
       tokenizedFilename
@@ -399,7 +402,12 @@ router.get(
       "- in GET /montage-service/play-video/:tokenizedMontageFilename"
     );
     const { tokenizedMontageFilename } = req.params;
-
+    console.log("------ Check Token from play-video -----");
+    console.log(tokenizedMontageFilename);
+    console.log(
+      `filename tokenized: ${detokenizeObject(tokenizedMontageFilename)}`
+    );
+    console.log("------ ENDCheck Token from play-video -----");
     // 🔹 Verify token
     jwt.verify(
       tokenizedMontageFilename,
