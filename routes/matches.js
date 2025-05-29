@@ -279,7 +279,7 @@ router.get("/:matchId/actions", authenticateToken, async (req, res) => {
 
     // Extract script IDs
     const scriptIds = scripts.map((script) => script.id);
-    console.log(`scriptIds: ${scriptIds}`);
+    // console.log(`scriptIds: ${scriptIds}`);
 
     // 🔹 Find all SyncContracts associated with these Scripts
     const syncContracts = await SyncContract.findAll({
@@ -287,7 +287,7 @@ router.get("/:matchId/actions", authenticateToken, async (req, res) => {
       attributes: ["id", "scriptId", "deltaTime"], // Need deltaTime per SyncContract
     });
 
-    console.log(`syncContracts: ${JSON.stringify(syncContracts)}`);
+    // console.log(`syncContracts: ${JSON.stringify(syncContracts)}`);
 
     if (syncContracts.length === 0) {
       return res.status(404).json({
@@ -317,7 +317,7 @@ router.get("/:matchId/actions", authenticateToken, async (req, res) => {
       order: [["timestamp", "ASC"]],
     });
 
-    console.log(`actions: ${JSON.stringify(actions)}`);
+    // console.log(`actions: ${JSON.stringify(actions)}`);
 
     if (actions.length === 0) {
       return res.json({ result: true, actions: [] });

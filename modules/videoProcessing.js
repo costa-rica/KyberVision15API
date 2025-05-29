@@ -431,28 +431,93 @@ async function requestJobQueuerVideoUploaderYouTubeProcessing(
     throw err;
   }
 }
-// async function requestJobQueuerVideoUploaderYouTubeProcessing(
+
+async function requestJobQueuerVideoMontageMaker(
+  filename,
+  actionsArray,
+  user,
+  token
+) {
+  try {
+    const response = await fetch(
+      "http://localhost:8003/video-montage-maker/add",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename,
+          actionsArray,
+          user,
+          token,
+        }),
+      }
+    );
+
+    const resultText = await response.text(); // handle both JSON and text
+
+    if (!response.ok) {
+      return {
+        success: false,
+        status: response.status,
+        message: `Queuer responded with error: ${resultText}`,
+      };
+    }
+
+    let resultData;
+    try {
+      resultData = JSON.parse(resultText);
+    } catch (err) {
+      resultData = resultText; // fallback if response is not JSON
+    }
+
+    return {
+      success: true,
+      status: response.status,
+      data: resultData,
+    };
+  } catch (err) {
+    return {
+      success: false,
+      status: 500,
+      message: `Error contacting montage queuer: ${err.message}`,
+    };
+  }
+}
+// async function requestJobQueuerVideoMontageMaker(
 //   filename,
-//   videoId
+//   actionsArray,
+//   user,
+//   token
 // ) {
-//   const url = `${process.env.URL_KV_JOB_QUEUER}/youtube-video-uploader/add-video`;
-//   console.log(
-//     `[in modules/reqeuest...] sending request to ${url} for ${filename}`
-//   );
 //   try {
-//     const response = await axios.post(url, { filename, videoId });
-//     console.log(`📡 Response from KyberVision15Queuer: ${response.data}`);
-
-//     return { success: true, data: response.data };
-//   } catch (error) {
-//     console.error(
-//       `❌ Failed to request KyberVision15Queuer for processing: ${filename}`
+//     const response = await fetch(
+//       "http://localhost:8003/video-montage-maker/add",
+//       {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({
+//           filename,
+//           actionsArray,
+//           user,
+//           token,
+//         }),
+//       }
 //     );
-//     console.error(`📝 Error: ${error.message}`);
 
-//     return { success: false, error: error.message };
+//     if (!response.ok) {
+//       const text = await response.text();
+//       throw new Error(`❌ Failed to queue YouTube upload job: ${text}`);
+//     }
+
+//     const result = await response.json();
+//     console.log("✅ Queuer YouTube response:", result);
+//     return result;
+//   } catch (err) {
+//     console.error("❌ Error contacting YouTube Queuer:", err.message);
+//     throw err;
 //   }
 // }
+
 module.exports = {
   upload,
   deleteVideo,
@@ -462,4 +527,5 @@ module.exports = {
   renameVideoFile,
   requestJobQueuerVideoUploaderProcessing,
   requestJobQueuerVideoUploaderYouTubeProcessing,
+  requestJobQueuerVideoMontageMaker,
 };

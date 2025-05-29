@@ -9,6 +9,7 @@ const {
   renameVideoFile,
   requestJobQueuerVideoUploaderProcessing,
   requestJobQueuerVideoUploaderYouTubeProcessing,
+  requestJobQueuerVideoMontageMaker,
 } = require("../modules/videoProcessing");
 const { updateSyncContractsWithVideoId } = require("../modules/scripts");
 const path = require("path");
@@ -321,31 +322,37 @@ router.post(
         .status(404)
         .json({ result: false, message: "Video not found" });
     }
-    // const videoFilePathAndName = path.join(
-    //   process.env.PATH_VIDEOS,
-    //   videoObj.filename
-    // );
 
-    const KV_VIDEO_PROCESSOR_PATH = path.join(
-      process.env.PATH_KV_VIDEO_PROCESSOR, // e.g., "/Users/nick/Documents/KyberVisionVideoProcessor"
-      process.env.NAME_KV_VIDEO_PROCESSOR // e.g., "videoProcessor.js"
+    const result = await requestJobQueuerVideoMontageMaker(
+      videoObj.filename,
+      actionsArray,
+      user,
+      token
     );
-    console.log(
-      `- Create video montage step #1: in API GET /montage-service/queue-a-job -`
-    );
-    try {
-      // Add job to the queue
-      jobQueue.addJob(
-        KV_VIDEO_PROCESSOR_PATH,
-        videoObj.filename,
-        actionsArray,
-        user,
-        token
-      ); // Pass arguments to queue
-      res.json({ message: "Job successfully queued and processed" });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to process job" });
+
+    if (result.success) {
+      res.json({
+        result: true,
+        message: "Job queued successfully",
+        data: result.data,
+      });
+    } else {
+      res.status(result.status || 500).json({
+        result: false,
+        message: result.message || "Failed to queue montage job",
+      });
     }
+    // const result = await requestJobQueuerVideoMontageMaker(
+    //   videoObj.filename,
+    //   actionsArray,
+    //   user,
+    //   token
+    // );
+    // if (result.ok) {
+    //   res.json({ result: true, message: "Job queued successfully" });
+    // } else {
+    //   res.status(500).json({ error });
+    // }
   }
 );
 
