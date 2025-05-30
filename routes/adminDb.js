@@ -484,4 +484,88 @@ router.delete(
   }
 );
 
+// 🔹 PUT /admin-db/table-row/:tableName/:rowId : route to update a specific row from a table
+router.put(
+  "/table-row/:tableName/:rowId",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const { tableName, rowId } = req.params;
+      const dataToSave = req.body;
+      console.log(`- in PUT /admin-db/table-row/${tableName}/${rowId}`);
+      console.log("Incoming data:", dataToSave);
+
+      // Validate table
+      if (!models[tableName]) {
+        return res
+          .status(400)
+          .json({ result: false, message: `Table '${tableName}' not found.` });
+      }
+
+      const Model = models[tableName];
+
+      let result;
+
+      if (!rowId || rowId === "null" || rowId === "undefined") {
+        // ➕ Create new record
+        result = await Model.create(dataToSave);
+      } else {
+        // 🔁 Update existing record
+        const [rowsUpdated] = await Model.update(dataToSave, {
+          where: { id: rowId },
+        });
+
+        if (rowsUpdated === 0) {
+          return res.status(404).json({
+            result: false,
+            message: `No record found with id ${rowId} in table '${tableName}'.`,
+          });
+        }
+
+        result = await Model.findByPk(rowId); // Return updated record
+      }
+
+      return res.json({
+        result: true,
+        message: `Row ${
+          rowId || result.id
+        } in '${tableName}' successfully saved.`,
+        // data: result,
+      });
+    } catch (error) {
+      console.error("Error saving row:", error);
+      return res.status(500).json({
+        result: false,
+        message: "Internal server error",
+        error: error.message,
+      });
+    }
+  }
+);
+
+// router.put(
+//   "/table-row/:tableName/:rowId",
+//   authenticateToken,
+//   async (req, res) => {
+//     try {
+//       const { tableName, rowId } = req.params;
+//       const { reqBody } = req.body;
+//       console.log(`- in PUT /admin-db/table-row/${tableName}/${rowId}`);
+//       console.log(JSON.stringify(reqBody, null, 2));
+
+//       res.json({
+//         result: true,
+//         message: `Row ${rowId} from table '${tableName}' has been updated.`,
+//       });
+//     } catch (error) {
+//       console.error("Error updating row:", error);
+//       res.status(500).json({
+//         result: false,
+//         message: "Internal server error",
+//         error: error.message,
+//       });
+//     }
+//   }
+// );
+
 module.exports = router;
