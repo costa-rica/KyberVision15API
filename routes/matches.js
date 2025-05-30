@@ -305,7 +305,7 @@ router.get("/:matchId/actions", authenticateToken, async (req, res) => {
       deltaTimeMap[sc.scriptId] = sc.deltaTime || 0.0; // Default 0.0 if undefined
     });
 
-    console.log(`📊 DeltaTime mapping:`, deltaTimeMap);
+    // console.log(`📊 DeltaTime mapping:`, deltaTimeMap);
 
     // // Extract syncContract IDs
     // const syncContractIds = syncContracts.map((sc) => sc.id);

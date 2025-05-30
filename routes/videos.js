@@ -168,7 +168,7 @@ router.get("/team/:teamId", authenticateToken, async (req, res) => {
         },
       ],
     });
-    console.log(videosArray);
+    // console.log(videosArray);
 
     // Process videos to include match & team details
     const formattedVideos = await Promise.all(
