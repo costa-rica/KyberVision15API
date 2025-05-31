@@ -164,16 +164,6 @@ router.post("/receive-actions-array", authenticateToken, async (req, res) => {
         return Action.upsert(actionObj); // Will insert or update based on timestamp + scriptId
       })
     );
-    // await Promise.all(
-    //   actionsArray.map((elem, index) => {
-    //     const actionObj = {
-    //       ...elem,
-    //       zone: 1,
-    //       scriptId,
-    //     };
-    //     Action.create({ ...actionObj });
-    //   })
-    // );
 
     res.json({
       result: true,

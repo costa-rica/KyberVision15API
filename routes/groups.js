@@ -59,10 +59,14 @@ router.get("/", authenticateToken, async (req, res) => {
       },
     });
 
+    console.log(groupContracts);
+
     // const teamsArray = groupContracts.map((gc) => gc.Team);
     const teamsArray = await Promise.all(
       groupContracts.map(async (gc) => {
         const team = gc.Team.toJSON(); // convert to plain object
+
+        // Add a practice Match
         const practiceMatch = await Match.findOne({
           where: {
             teamIdAnalyzed: team.id,
@@ -75,6 +79,8 @@ router.get("/", authenticateToken, async (req, res) => {
         return team;
       })
     );
+
+    console.log(teamsArray);
 
     res.status(200).json({ teamsArray });
   } catch (error) {

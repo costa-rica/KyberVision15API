@@ -371,93 +371,30 @@ router.get("/:matchId/actions", authenticateToken, async (req, res) => {
   }
 });
 
-// // 🔹 Get all actions for a match (GET /matches/:matchId/actions)
-// router.get("/:matchId/actions", authenticateToken, async (req, res) => {
-//   console.log(`- in GET /matches/${req.params.matchId}/actions`);
+// GET /matches/to-script/:teamId
+router.get("/to-script/:teamId", authenticateToken, async (req, res) => {
+  const { teamId } = req.params;
 
-//   try {
-//     const { matchId } = req.params;
+  try {
+    const matchesArray = await Match.findAll({
+      where: { teamIdAnalyzed: teamId },
+    });
 
-//     // 🔹 Find all Scripts linked to this matchId
-//     const scripts = await Script.findAll({
-//       where: { matchId },
-//       attributes: ["id"], // Only need script IDs
-//     });
+    if (matchesArray.length === 0) {
+      return res
+        .status(404)
+        .json({ result: false, message: "No matches found for this team." });
+    }
 
-//     if (scripts.length === 0) {
-//       return res
-//         .status(404)
-//         .json({ result: false, message: "No actions found for this match." });
-//     }
-
-//     // Extract script IDs
-//     const scriptIds = scripts.map((script) => script.id);
-
-//     // 🔹 Find all SyncContracts associated with these Scripts
-//     const syncContracts = await SyncContract.findAll({
-//       where: { scriptId: scriptIds },
-//       attributes: ["id", "deltaTime"], // Need deltaTime now
-//     });
-
-//     if (syncContracts.length === 0) {
-//       return res.status(404).json({
-//         result: false,
-//         message: "No sync contracts found for this match.",
-//       });
-//     }
-
-//     // Extract syncContract IDs
-//     const syncContractIds = syncContracts.map((sc) => sc.id);
-
-//     // 🔹 Find all Actions linked to these SyncContracts
-//     const actions = await Action.findAll({
-//       where: { syncContractId: syncContractIds },
-//       order: [["timestamp", "ASC"]],
-//     });
-
-//     if (actions.length === 0) {
-//       return res.json({ result: true, actions: [] });
-//     }
-
-//     // Determine the syncContract deltaTime (assuming all contracts have the same deltaTime)
-//     const deltaTime = syncContracts[0].deltaTime || 0.0;
-//     // TODO: each sync contract delta time should apply to its corresponding actions
-
-//     // Compute estimated start of video timestamp
-//     const estimatedStartOfVideo = createEstimatedTimestampStartOfVideo(
-//       actions,
-//       deltaTime
-//     );
-
-//     // Attach timestampFromStartOfVideo to each action
-//     const updatedActions = actions.map((action, index) => ({
-//       ...action.toJSON(),
-//       timestampFromStartOfVideo:
-//         (new Date(action.timestamp) - estimatedStartOfVideo) / 1000, // Convert ms to seconds
-//       reviewVideoActionsArrayIndex: index + 1, // Start indexing at 1
-//     }));
-
-//     const uniqueListOfPlayerNamesArray = await createUniquePlayerNamesArray(
-//       updatedActions
-//     );
-//     const uniqueListOfPlayerObjArray = await createUniquePlayerObjArray(
-//       updatedActions
-//     );
-//     // console.log(uniqueListOfPlayerObjArray);
-//     res.json({
-//       result: true,
-//       actionsArray: updatedActions,
-//       playerNamesArray: uniqueListOfPlayerNamesArray,
-//       playerDbObjectsArray: uniqueListOfPlayerObjArray,
-//     });
-//   } catch (error) {
-//     console.error("Error fetching actions for match:", error);
-//     res.status(500).json({
-//       result: false,
-//       message: "Internal server error",
-//       error: error.message,
-//     });
-//   }
-// });
+    res.json({ result: true, matchesArray });
+  } catch (error) {
+    console.error("❌ Error fetching matches for team:", error);
+    res.status(500).json({
+      result: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+});
 
 module.exports = router;
